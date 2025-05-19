@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div id="prompt-container">
+    <p id="prompt">Loading...</p>
+</div>
+
+<div id="current-info-container"></div>
+
+<div id="input-container">
+    <p>Loading...</p>
+</div>
+
+<div id="debug-container" style="margin-top: 20px; padding: 10px; background-color: #f0f0f0; display: none;">
+    <h3>Debug Information</h3>
+    <pre id="debug-output">Loading...</pre>
+</div>
+
+<div id="error-message" class="error"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Enable debug mode
+    const DEBUG = true;
+    
+    // Show debug container if debug mode is enabled
+    if (DEBUG) {
+        document.getElementById('debug-container').style.display = 'block';
+    }
+    
+    // Debug log function
+    function debugLog(message) {
+        if (DEBUG) {
+            console.log(message);
+            const debugOutput = document.getElementById('debug-output');
+            debugOutput.textContent = debugOutput.textContent + '\n' + message;
+        }
+    }
+    
+    const socket = io();
+    let currentRequest = null;
+    const requestId = "{{ request_id }}";
+    
+    debugLog(`Request ID: ${requestId}`);
+    
+    // Socket.io connection events
+    socket.on('connect', () => {
+        debugLog('Socket.io connected');
+    });
+    
+    socket.on('disconnect', () => {
+        debugLog('Socket.io disconnected');
+    });
+    
+    socket.on('connect_error', (error) => {
+        debugLog(`Socket.io connection error: ${error.message}`);
+    });
+    
+    // Fetch request data
+    async function fetchRequestData() {
+        try {
+            debugLog(`Fetching request data for ID: ${requestId}`);
+            const response = await fetch(`/api/request/${requestId}`);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                debugLog(`Error response: ${response.status} - ${errorText}`);
+                document.getElementById('prompt-container').innerHTML = '<p>Request not found</p>';
+                document.getElementById('input-container').innerHTML = '<p>Invalid request ID</p>';
+                return;
+            }
+            
+            const data = await response.json();
+            debugLog(`Received request data: ${JSON.stringify(data)}`);
+            
+            if (data.type !== 'request_info') {
+                // Wrong request type
+                debugLog(`Wrong request type: ${data.type}`);
+                document.getElementById('prompt-container').innerHTML = '<p>Wrong request type</p>';
+                document.getElementById('input-container').innerHTML = '<p>Please navigate to the correct page</p>';
+                return;
+            }
+            
+            currentRequest = data;
+            renderInfoRequest(data);
+        } catch (error) {
+            debugLog(`Error fetching request: ${error.message}`);
+            console.error('Error fetching request:', error);
+            document.getElementById('error-message').textContent = 'Error loading request data';
+        }
+    }
+    
+    // Render info request
+    function renderInfoRequest(data) {
+        debugLog('Rendering info request');
+        // Set prompt
+        document.getElementById('prompt-container').innerHTML = `<p>${data.prompt}</p>`;
+        
+        // Set current info if available
+        if (data.current_info) {
+            debugLog(`Current info available: ${data.current_info.substring(0, 50)}...`);
+            document.getElementById('current-info-container').innerHTML = `
+                <div class="current-info">
+                    <h3>Current Information</h3>
+                    <pre>${data.current_info}</pre>
+                </div>
+            `;
+        } else {
+            debugLog('No current info available');
+            document.getElementById('current-info-container').innerHTML = '';
+        }
+        
+        // Create input
+        let inputHtml = '';
+        
+        if (data.multiline) {
+            debugLog('Creating multiline input');
+            inputHtml = `
+                <label for="user-input">Enter your information:</label>
+                <textarea id="user-input"></textarea>
+            `;
+        } else {
+            debugLog('Creating single line input');
+            inputHtml = `
+                <label for="user-input">Enter your information:</label>
+                <input type="text" id="user-input">
+            `;
+        }
+        
+        // Add submit button
+        inputHtml += `
+            <button id="submit-btn" type="button">Submit</button>
+        `;
+        
+        document.getElementById('input-container').innerHTML = inputHtml;
+        
+        // Add event listeners
+        document.getElementById('submit-btn').addEventListener('click', submitInfo);
+        
+        // Focus on input
+        document.getElementById('user-input').focus();
+    }
+    
+    // Submit info
+    function submitInfo() {
+        debugLog('Submit button clicked');
+        const userInput = document.getElementById('user-input').value.trim();
+        
+        if (!userInput) {
+            document.getElementById('error-message').textContent = 'Please enter your information';
+            debugLog('No information entered');
+            return;
+        }
+        
+        debugLog(`Submitting information: ${userInput.substring(0, 50)}...`);
+        
+        // Send result to server
+        const data = {
+            request_id: requestId,
+            text: userInput
+        };
+        
+        debugLog(`Sending data to server: ${JSON.stringify(data)}`);
+        socket.emit('submit_info', data);
+        
+        // Show confirmation
+        document.getElementById('input-container').innerHTML = '<p>Your information has been submitted.</p>';
+        document.getElementById('error-message').textContent = '';
+        debugLog('Information submitted, waiting for confirmation');
+        
+        // Close the window after a short delay
+        setTimeout(() => {
+            debugLog('Closing window after timeout');
+            window.close();
+        }, 3000);
+    }
+    
+    // Listen for server confirmation
+    socket.on(`info_received_${requestId}`, () => {
+        // Close the window after confirmation
+        debugLog('Received confirmation from server, closing window');
+        window.close();
+    });
+    
+    // Initialize
+    fetchRequestData();
+</script>
+{% endblock %}

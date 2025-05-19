@@ -1,0 +1,7 @@
+# -*- coding: utf-8 -*-
+# PyQt UI 依赖
+# 引入基础依赖
+-r requirements-base.txt
+
+# PyQt 界面依赖
+PyQt5>=5.15.0 

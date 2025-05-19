@@ -1,0 +1,26 @@
+{
+  "select_prompt": "Please select one of the following options",
+  "custom_input_tip": "Enter '0' to provide a custom answer",
+  "input_option": "Please enter the option number or a custom answer: ",
+  "invalid_option": "Invalid option number, please try again",
+  "custom_input": "Please enter your custom answer",
+  "additional_info": "Please provide more information",
+  "current_info": "This is the current information, please supplement",
+  "multiline_tip": "Please enter multiple lines. Type a line with only 'END' to finish.",
+  "wait_user_input": "Waiting for user input...",
+  "wait_user_multiline": "Waiting for user to enter multiple lines...",
+  "info_request_title": "Information Request",
+  "current_info_title": "Current Information",
+
+  "input_prompt": "Please enter additional information: ",
+  
+  "wait_user_select": "Displaying options with PyQt interface...",
+  "select_dialog_title": "Select Option",
+  "custom_input_group": "Custom Input",
+  "cancel_button": "Cancel",
+  "submit_button": "Submit",
+  "select_error_message": "Please select an option or provide custom input",
+  "user_selected": "User has selected an option",
+  "input_required_error": "Please enter additional information",
+  "user_provided_info": "User has provided additional information"
+}

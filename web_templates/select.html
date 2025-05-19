@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div id="prompt-container">
+    <p id="prompt">Loading...</p>
+</div>
+
+<div id="options-container">
+    <p>Loading options...</p>
+</div>
+
+<div id="debug-container" style="margin-top: 20px; padding: 10px; background-color: #f0f0f0; display: none;">
+    <h3>Debug Information</h3>
+    <pre id="debug-output">Loading...</pre>
+</div>
+
+<div id="error-message" class="error"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Enable debug mode
+    const DEBUG = true;
+    
+    // Show debug container if debug mode is enabled
+    if (DEBUG) {
+        document.getElementById('debug-container').style.display = 'block';
+    }
+    
+    // Debug log function
+    function debugLog(message) {
+        if (DEBUG) {
+            console.log(message);
+            const debugOutput = document.getElementById('debug-output');
+            debugOutput.textContent = debugOutput.textContent + '\n' + message;
+        }
+    }
+    
+    const socket = io();
+    let currentRequest = null;
+    const requestId = "{{ request_id }}";
+    
+    debugLog(`Request ID: ${requestId}`);
+    
+    // Socket.io connection events
+    socket.on('connect', () => {
+        debugLog('Socket.io connected');
+    });
+    
+    socket.on('disconnect', () => {
+        debugLog('Socket.io disconnected');
+    });
+    
+    socket.on('connect_error', (error) => {
+        debugLog(`Socket.io connection error: ${error.message}`);
+    });
+    
+    // Fetch request data
+    async function fetchRequestData() {
+        try {
+            debugLog(`Fetching request data for ID: ${requestId}`);
+            const response = await fetch(`/api/request/${requestId}`);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                debugLog(`Error response: ${response.status} - ${errorText}`);
+                document.getElementById('prompt-container').innerHTML = '<p>Request not found</p>';
+                document.getElementById('options-container').innerHTML = '<p>Invalid request ID</p>';
+                return;
+            }
+            
+            const data = await response.json();
+            debugLog(`Received request data: ${JSON.stringify(data)}`);
+            
+            if (data.type !== 'select_option') {
+                // Wrong request type
+                debugLog(`Wrong request type: ${data.type}`);
+                document.getElementById('prompt-container').innerHTML = '<p>Wrong request type</p>';
+                document.getElementById('options-container').innerHTML = '<p>Please navigate to the correct page</p>';
+                return;
+            }
+            
+            currentRequest = data;
+            renderSelectOptions(data);
+        } catch (error) {
+            debugLog(`Error fetching request: ${error.message}`);
+            console.error('Error fetching request:', error);
+            document.getElementById('error-message').textContent = 'Error loading request data';
+        }
+    }
+    
+    // Render select options
+    function renderSelectOptions(data) {
+        debugLog('Rendering select options');
+        // Set prompt
+        document.getElementById('prompt-container').innerHTML = `<p>${data.prompt}</p>`;
+        
+        // Create options
+        let optionsHtml = '';
+        
+        data.options.forEach((option, index) => {
+            let optionText = '';
+            let description = '';
+            
+            if (typeof option === 'string') {
+                optionText = option;
+            } else {
+                optionText = option.title || option.name || option.description || `Option ${index + 1}`;
+                description = option.description || '';
+            }
+            
+            optionsHtml += `
+                <div class="option-container">
+                    <label>
+                        <input type="radio" name="option" value="${index}">
+                        ${optionText}
+                    </label>
+                    ${description ? `<p>${description}</p>` : ''}
+                </div>
+            `;
+        });
+        
+        // Add custom option if allowed
+        if (data.allow_custom) {
+            optionsHtml += `
+                <div class="option-container custom-option">
+                    <label>
+                        <input type="radio" name="option" value="custom">
+                        Custom answer:
+                    </label>
+                    <input type="text" id="custom-input" disabled>
+                </div>
+            `;
+        }
+        
+        // Add submit button
+        optionsHtml += `
+            <button id="submit-btn" type="button">Submit</button>
+        `;
+        
+        document.getElementById('options-container').innerHTML = optionsHtml;
+        
+        // Add event listeners
+        document.querySelectorAll('input[name="option"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                if (this.value === 'custom') {
+                    document.getElementById('custom-input').disabled = false;
+                    document.getElementById('custom-input').focus();
+                } else {
+                    document.getElementById('custom-input').disabled = true;
+                }
+            });
+        });
+        
+        document.getElementById('submit-btn').addEventListener('click', submitSelection);
+    }
+    
+    // Submit selection
+    function submitSelection() {
+        debugLog('Submit button clicked');
+        const selectedOption = document.querySelector('input[name="option"]:checked');
+        
+        if (!selectedOption) {
+            document.getElementById('error-message').textContent = 'Please select an option';
+            debugLog('No option selected');
+            return;
+        }
+        
+        const result = {
+            request_id: requestId,
+            selected_index: -1,
+            selected_option: null,
+            custom_input: '',
+            is_custom: false
+        };
+        
+        if (selectedOption.value === 'custom') {
+            const customInput = document.getElementById('custom-input').value.trim();
+            
+            if (!customInput) {
+                document.getElementById('error-message').textContent = 'Please enter your custom answer';
+                debugLog('No custom input provided');
+                return;
+            }
+            
+            debugLog(`Custom option selected with input: ${customInput}`);
+            result.custom_input = customInput;
+            result.is_custom = true;
+        } else {
+            const index = parseInt(selectedOption.value);
+            debugLog(`Option selected with index: ${index}`);
+            result.selected_index = index;
+            result.selected_option = currentRequest.options[index];
+        }
+        
+        // Send result to server
+        debugLog(`Sending selection to server: ${JSON.stringify(result)}`);
+        socket.emit('submit_selection', result);
+        
+        // Show confirmation
+        document.getElementById('options-container').innerHTML = '<p>Your selection has been submitted.</p>';
+        document.getElementById('error-message').textContent = '';
+        debugLog('Selection submitted, waiting for confirmation');
+        
+        // Close the window after a short delay
+        setTimeout(() => {
+            debugLog('Closing window after timeout');
+            window.close();
+        }, 3000);
+    }
+    
+    // Listen for server confirmation
+    socket.on(`selection_received_${requestId}`, () => {
+        // Close the window after confirmation
+        debugLog('Received confirmation from server, closing window');
+        window.close();
+    });
+    
+    // Initialize
+    fetchRequestData();
+</script>
+{% endblock %}

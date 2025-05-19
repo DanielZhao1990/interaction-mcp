@@ -1,0 +1,7 @@
+# Web UI 依赖
+# 引入基础依赖
+-r requirements-base.txt
+
+# Web 界面依赖
+flask>=2.0.0
+flask-socketio>=5.0.0 

@@ -1,0 +1,25 @@
+{
+  "select_prompt": "请选择以下选项之一",
+  "custom_input_tip": "输入'0'可以提供自定义回答",
+  "input_option": "请输入选项编号或自定义回答: ",
+  "invalid_option": "无效的选项编号，请重新输入",
+  "custom_input": "请输入您的自定义回答",
+  "additional_info": "请提供更多信息",
+  "current_info": "这是当前信息，需要补充",
+  "multiline_tip": "请输入多行内容，完成后输入一个只包含 'END' 的行表示结束",
+  "wait_user_input": "等待用户输入...",
+  "wait_user_multiline": "等待用户输入多行内容...",
+  "info_request_title": "信息补充请求",
+  "current_info_title": "当前信息",
+  "input_prompt": "请输入补充信息: ",
+  
+  "wait_user_select": "正在使用PyQt界面展示选项...",
+  "select_dialog_title": "选项选择",
+  "custom_input_group": "自定义输入",
+  "cancel_button": "取消",
+  "submit_button": "提交",
+  "select_error_message": "请选择一个选项或提供自定义输入",
+  "user_selected": "用户已选择选项",
+  "input_required_error": "请输入补充信息",
+  "user_provided_info": "用户提供了补充信息"
+}
