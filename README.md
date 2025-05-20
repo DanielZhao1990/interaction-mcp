@@ -167,7 +167,30 @@ python main.py run --log-level debug
 
 ### 3. Configure Cursor or Windsurf
 
-#### Using SSE Protocol (Recommended)
+#### Using stdio Protocol (Recommended)
+
+The stdio protocol is the most stable and recommended connection method, communicating directly with Python scripts through standard input/output, with the following advantages:
+
+- Higher stability and reliability
+- Can open multiple dialog boxes simultaneously
+- Simple and direct, no need to deal with network connection issues
+- Tighter integration with the system, faster response
+
+Configuration example:
+
+```json
+{
+  "ai-interaction": {
+    "command": "python",
+    "args": ["path/to/main.py", "run", "--transport", "stdio", "--ui-type", "cli"],
+    "env": {}
+  }
+}
+```
+
+#### Using SSE Protocol (Alternative)
+
+If you need to connect to a remote server over the network, you can use the SSE protocol:
 
 Local startup:
 ```bash
@@ -191,18 +214,6 @@ Windsurf configuration:
   "ai-interaction": {
     "serverUrl": "http://127.0.0.1:7888/sse",
     "disabled": false
-  }
-}
-```
-
-#### Using stdio Protocol (Not Recommended)
-
-```json
-{
-  "cursor-interaction": {
-    "command": "python",
-    "args": ["path/to/main.py","run","--transport","stdio"],
-    "env": {}
   }
 }
 ```
@@ -268,6 +279,23 @@ This is particularly useful for:
 - Demonstrating the service to users
 - Verifying server functionality
 
+#### STDIO Test Client
+
+For specifically testing the stdio transport protocol, we provide a command line tool:
+
+```bash
+# Test stdio connection with default settings
+python mcp_client_stdio.py
+
+# Specify UI type
+python mcp_client_stdio.py --ui=pyqt
+
+# Test specific tools
+python mcp_client_stdio.py --test=select_option
+```
+
+For more details, see the [STDIO Testing Guide](README_STDIO_TEST.md).
+
 #### UI Testing
 
 ```bash
@@ -318,7 +346,7 @@ The supplementary information input by the user (string)
 To integrate this MCP service with AI tools, follow these steps:
 
 1. Start the MCP service: `python main.py run`
-2. Configure the MCP endpoint in the AI tool, pointing to the service address (e.g., `http://127.0.0.1:8000/sse`)
+2. Configure the MCP endpoint in the AI tool, choosing either stdio or SSE protocol as needed
 3. Call the appropriate MCP tool when the AI model needs user input or option selection
 
 ## Examples

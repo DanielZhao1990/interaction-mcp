@@ -167,7 +167,30 @@ python main.py run --log-level debug
 
 ### 3. 配置 Cursor 或 Windsurf
 
-#### 使用 SSE 协议（推荐）
+#### 使用 stdio 协议（推荐）
+
+stdio 协议是最稳定和推荐的连接方式，它通过标准输入/输出直接与 Python 脚本通信，具有以下优势：
+
+- 更高的稳定性和可靠性
+- 可以同时弹出多个对话框
+- 简单直接，无需处理网络连接问题
+- 与系统集成更紧密，响应更快
+
+配置示例：
+
+```json
+{
+  "ai-interaction": {
+    "command": "python",
+    "args": ["path/to/main.py", "run", "--transport", "stdio", "--ui-type", "cli"],
+    "env": {}
+  }
+}
+```
+
+#### 使用 SSE 协议（替代方案）
+
+如果您需要通过网络连接到远程服务器，可以使用 SSE 协议：
 
 本地启动：
 ```bash
@@ -191,18 +214,6 @@ Windsurf 配置：
   "ai-interaction": {
     "serverUrl": "http://127.0.0.1:7888/sse",
     "disabled": false
-  }
-}
-```
-
-#### 使用 stdio 协议（不推荐）
-
-```json
-{
-  "cursor-interaction": {
-    "command": "python",
-    "args": ["path/to/main.py","run","--transport","stdio"],
-    "env": {}
   }
 }
 ```
@@ -268,6 +279,23 @@ python mcp_client_en.py --host localhost --port 7888 --ui cli
 - 向用户演示服务
 - 验证服务器功能
 
+#### STDIO 测试客户端
+
+为了专门测试 stdio 传输协议，我们提供了一个命令行工具：
+
+```bash
+# 使用默认设置测试 stdio 连接
+python mcp_client_stdio.py
+
+# 指定 UI 类型
+python mcp_client_stdio.py --ui=pyqt
+
+# 测试特定工具
+python mcp_client_stdio.py --test=select_option
+```
+
+更多详情请参阅 [STDIO 测试指南](README_STDIO_TEST.md)。
+
 #### UI 测试
 
 ```bash
@@ -318,7 +346,7 @@ python test_ui.py --ui-type=cli
 要将此 MCP 服务与 AI 工具集成，请按照以下步骤操作：
 
 1. 启动 MCP 服务：`python main.py run`
-2. 在 AI 工具中配置 MCP 端点，指向服务地址（例如，`http://127.0.0.1:8000/sse`）
+2. 在 AI 工具中配置 MCP 端点，根据需要选择使用 stdio 或 SSE 协议
 3. 当 AI 模型需要用户输入或选项选择时调用适当的 MCP 工具
 
 ## 示例
