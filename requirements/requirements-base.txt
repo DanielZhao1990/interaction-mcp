@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 # 基础依赖 - 所有 UI 类型都需要
 fastmcp>=2.3.0
-python-dotenv>=1.1.0
 typer>=0.15.0
-httpx>=0.24.0
 psutil>=5.9.0

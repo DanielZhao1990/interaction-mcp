@@ -69,7 +69,15 @@
 
 ## 使用指南
 
-### 1. 安装依赖
+### 1. 开始使用（两种选择）
+
+#### 选项A：使用预编译可执行文件（Windows推荐）
+
+1. 从[GitHub Releases](https://github.com/DanielZhao1990/interaction-mcp/releases)页面下载最新的预编译可执行文件。
+2. 无需安装 - 只需下载并运行可执行文件。
+3. 跳到下面的步骤3进行配置。
+
+#### 选项B：从源代码安装
 
 本项目根据不同的 UI 类型分离依赖：
 
@@ -143,31 +151,66 @@ uv pip install -e ".[all]"      # 所有 UI 类型
 
 ```bash
 # 命令行界面（默认）
-python main.py run --ui-type=cli
+python main.py run --ui=cli
 
 # Web 界面
-python main.py run --ui-type=web
+python main.py run --ui=web
 
 # PyQt 界面
-python main.py run --ui-type=pyqt
+python main.py run --ui=pyqt
 ```
 
 其他服务启动选项：
 
 ```bash
-# 使用默认设置启动服务（地址：127.0.0.1，端口：8000）
+# 使用默认设置启动服务（地址：127.0.0.1，端口：7888）
 python main.py run
 
 # 指定主机和端口
 python main.py run --host 0.0.0.0 --port 8888
 
 # 指定日志级别
-python main.py run --log-level debug
+python main.py run --log-level warning
 ```
 
-### 3. 配置 Cursor 或 Windsurf
+### 3. 配置 Cursor、Windsurf 或 Claude
 
-#### 使用 SSE 协议（推荐）
+#### 使用 stdio 协议（推荐）
+
+stdio 协议是最稳定和推荐的连接方式，它通过标准输入/输出直接与 Python 脚本通信，具有以下优势：
+
+- 更高的稳定性和可靠性
+- 可以同时弹出多个对话框
+- 简单直接，无需处理网络连接问题
+- 与系统集成更紧密，响应更快
+
+配置示例：
+
+##### 使用 Python 源码
+```json
+{
+  "ai-interaction": {
+    "command": "python",
+    "args": ["path/to/main.py", "run", "--transport", "stdio", "--ui", "cli"],
+    "env": {}
+  }
+}
+```
+
+##### 使用可执行文件
+```json
+{
+  "ai-interaction": {
+    "command": "D:/Path/To/Your/mcp-interactive.exe",
+    "args": ["run", "--transport", "stdio", "--ui", "pyqt"],
+    "env": {}
+  }
+}
+```
+
+#### 使用 SSE 协议（替代方案）
+
+如果您需要通过网络连接到远程服务器，可以使用 SSE 协议：
 
 本地启动：
 ```bash
@@ -191,18 +234,6 @@ Windsurf 配置：
   "ai-interaction": {
     "serverUrl": "http://127.0.0.1:7888/sse",
     "disabled": false
-  }
-}
-```
-
-#### 使用 stdio 协议（不推荐）
-
-```json
-{
-  "cursor-interaction": {
-    "command": "python",
-    "args": ["path/to/main.py","run","--transport","stdio"],
-    "env": {}
   }
 }
 ```
@@ -235,10 +266,10 @@ python main.py list-tools
 
 ```bash
 # 测试选项选择工具
-python main.py test select_option
+python main.py test select_option --ui=cli
 
 # 测试信息补充工具
-python main.py test request_additional_info
+python main.py test request_additional_info --ui=cli
 ```
 
 #### 交互式测试客户端
@@ -268,17 +299,34 @@ python mcp_client_en.py --host localhost --port 7888 --ui cli
 - 向用户演示服务
 - 验证服务器功能
 
+#### STDIO 测试客户端
+
+为了专门测试 stdio 传输协议，我们提供了一个命令行工具：
+
+```bash
+# 使用默认设置测试 stdio 连接
+python mcp_client_stdio.py
+
+# 指定 UI 类型
+python mcp_client_stdio.py --ui=pyqt
+
+# 测试特定工具
+python mcp_client_stdio.py --test=select_option
+```
+
+更多详情请参阅 [STDIO 测试指南](README_STDIO_TEST.md)。
+
 #### UI 测试
 
 ```bash
 # 测试 PyQt 界面
-python test_ui.py --ui-type=pyqt
+python test_ui.py --ui=pyqt
 
 # 测试 Web 界面
-python test_ui.py --ui-type=web
+python test_ui.py --ui=web
 
 # 测试 CLI 界面
-python test_ui.py --ui-type=cli
+python test_ui.py --ui=cli
 ```
 
 ## 工具描述
@@ -317,9 +365,33 @@ python test_ui.py --ui-type=cli
 
 要将此 MCP 服务与 AI 工具集成，请按照以下步骤操作：
 
-1. 启动 MCP 服务：`python main.py run`
-2. 在 AI 工具中配置 MCP 端点，指向服务地址（例如，`http://127.0.0.1:8000/sse`）
+1. 启动 MCP 服务，使用可执行文件或Python源代码：
+   - 使用可执行文件：`mcp-interactive.exe run`
+   - 使用Python源代码：`python main.py run`
+2. 在 AI 工具中配置 MCP 端点，根据需要选择使用 stdio 或 SSE 协议
 3. 当 AI 模型需要用户输入或选项选择时调用适当的 MCP 工具
+
+### Claude 集成
+
+要与Anthropic官方产品或第三方应用中的Claude集成：
+
+1. 在您的AI工具设置中配置stdio连接：
+   ```json
+   {
+     "mcp-interaction": {
+       "command": "D:/Path/To/Your/mcp-interactive.exe",
+       "args": ["run", "--transport", "stdio", "--ui", "pyqt"],
+       "env": {}
+     }
+   }
+   ```
+
+2. 配置Claude在需要时使用交互服务，使用如下指令：
+   - "当您需要用户输入或确认时，使用MCP交互服务"
+   - "对于多选项，调用select_option工具"
+   - "对于收集额外用户信息，调用request_additional_info工具"
+
+3. Claude现在将能够通过MCP服务直接呈现选项并请求额外信息。
 
 ## 示例
 
@@ -371,6 +443,71 @@ async with Client("http://127.0.0.1:8000/sse") as client:
 - **Linux/Mac**：这些平台尚未经过全面测试。您的体验可能会有所不同。
 
 我们正在积极改进所有平台和 UI 类型的兼容性。
+
+## 构建与分发
+
+### 构建可执行文件
+
+本项目包含一个用于构建 Windows 独立可执行文件的脚本：
+
+```bash
+# 构建 Windows 可执行文件
+build_executable.bat
+```
+
+这将在 `dist` 目录中创建 `mcp-interactive.exe`，您可以在没有 Python 安装的情况下运行它。
+
+### 跨平台构建
+
+为不同平台构建可执行文件：
+
+#### Windows
+```bash
+# 使用批处理脚本
+build_executable.bat
+
+# 或手动 PyInstaller 命令
+pyinstaller mcp-interactive.spec
+```
+
+#### macOS
+```bash
+# 确保已安装 PyInstaller
+pip install pyinstaller
+
+# 使用 spec 文件构建
+pyinstaller mcp-interactive.spec
+```
+
+#### Linux
+```bash
+# 确保已安装 PyInstaller
+pip install pyinstaller
+
+# 使用 spec 文件构建
+pyinstaller mcp-interactive.spec
+```
+
+注意：您必须在目标平台上构建（例如，您不能从 Windows 构建 macOS 可执行文件）
+
+### 通过 GitHub 分发
+
+要使您构建的可执行文件可供下载：
+
+1. 为您的项目创建 GitHub 发布
+2. 将构建好的可执行文件作为发布资产上传
+3. 提供清晰的文档，说明每个平台使用哪个可执行文件
+
+示例步骤：
+1. 导航到您的 GitHub 仓库
+2. 点击右侧边栏中的"Releases"
+3. 点击"Create a new release"
+4. 设置版本标签（例如，v1.0.0）
+5. 为您的发布添加标题和描述
+6. 拖放或上传不同平台的可执行文件
+7. 点击"Publish release"
+
+用户随后可以从 GitHub 发布页面下载适合其操作系统的版本。
 
 ## 许可证
 

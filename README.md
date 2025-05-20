@@ -69,7 +69,15 @@ This project supports three different user interface types, each with its own ch
 
 ## Usage Guide
 
-### 1. Install Dependencies
+### 1. Getting Started (Two Options)
+
+#### Option A: Use Pre-compiled Executable (Recommended for Windows)
+
+1. Download the latest pre-compiled executable from the [GitHub Releases](https://github.com/DanielZhao1990/interaction-mcp/releases) page.
+2. No installation required - simply download and run the executable.
+3. Skip to step 3 below for configuration.
+
+#### Option B: Install from Source Code
 
 This project separates dependencies based on different UI types:
 
@@ -143,31 +151,66 @@ Start different UI response methods:
 
 ```bash
 # Command line interface (default)
-python main.py run --ui-type=cli
+python main.py run --ui=cli
 
 # Web interface
-python main.py run --ui-type=web
+python main.py run --ui=web
 
 # PyQt interface
-python main.py run --ui-type=pyqt
+python main.py run --ui=pyqt
 ```
 
 Other service startup options:
 
 ```bash
-# Start the service with default settings (address: 127.0.0.1, port: 8000)
+# Start the service with default settings (address: 127.0.0.1, port: 7888)
 python main.py run
 
 # Specify host and port
 python main.py run --host 0.0.0.0 --port 8888
 
 # Specify log level
-python main.py run --log-level debug
+python main.py run --log-level warning
 ```
 
-### 3. Configure Cursor or Windsurf
+### 3. Configure Cursor, Windsurf, or Claude
 
-#### Using SSE Protocol (Recommended)
+#### Using stdio Protocol (Recommended)
+
+The stdio protocol is the most stable and recommended connection method, communicating directly with Python scripts through standard input/output, with the following advantages:
+
+- Higher stability and reliability
+- Can open multiple dialog boxes simultaneously
+- Simple and direct, no need to deal with network connection issues
+- Tighter integration with the system, faster response
+
+Configuration examples:
+
+##### Using with Python (source code)
+```json
+{
+  "ai-interaction": {
+    "command": "python",
+    "args": ["path/to/main.py", "run", "--transport", "stdio", "--ui", "cli"],
+    "env": {}
+  }
+}
+```
+
+##### Using with Executable
+```json
+{
+  "ai-interaction": {
+    "command": "D:/Path/To/Your/mcp-interactive.exe",
+    "args": ["run", "--transport", "stdio", "--ui", "pyqt"],
+    "env": {}
+  }
+}
+```
+
+#### Using SSE Protocol (Alternative)
+
+If you need to connect to a remote server over the network, you can use the SSE protocol:
 
 Local startup:
 ```bash
@@ -191,18 +234,6 @@ Windsurf configuration:
   "ai-interaction": {
     "serverUrl": "http://127.0.0.1:7888/sse",
     "disabled": false
-  }
-}
-```
-
-#### Using stdio Protocol (Not Recommended)
-
-```json
-{
-  "cursor-interaction": {
-    "command": "python",
-    "args": ["path/to/main.py","run","--transport","stdio"],
-    "env": {}
   }
 }
 ```
@@ -235,10 +266,10 @@ python main.py list-tools
 
 ```bash
 # Test option selection tool
-python main.py test select_option
+python main.py test select_option --ui=cli
 
 # Test information supplement tool
-python main.py test request_additional_info
+python main.py test request_additional_info --ui=cli
 ```
 
 #### Interactive Test Client
@@ -268,17 +299,34 @@ This is particularly useful for:
 - Demonstrating the service to users
 - Verifying server functionality
 
+#### STDIO Test Client
+
+For specifically testing the stdio transport protocol, we provide a command line tool:
+
+```bash
+# Test stdio connection with default settings
+python mcp_client_stdio.py
+
+# Specify UI type
+python mcp_client_stdio.py --ui=pyqt
+
+# Test specific tools
+python mcp_client_stdio.py --test=select_option
+```
+
+For more details, see the [STDIO Testing Guide](README_STDIO_TEST.md).
+
 #### UI Testing
 
 ```bash
 # Test PyQt interface
-python test_ui.py --ui-type=pyqt
+python test_ui.py --ui=pyqt
 
 # Test Web interface
-python test_ui.py --ui-type=web
+python test_ui.py --ui=web
 
 # Test CLI interface
-python test_ui.py --ui-type=cli
+python test_ui.py --ui=cli
 ```
 
 ## Tool Description
@@ -317,9 +365,33 @@ The supplementary information input by the user (string)
 
 To integrate this MCP service with AI tools, follow these steps:
 
-1. Start the MCP service: `python main.py run`
-2. Configure the MCP endpoint in the AI tool, pointing to the service address (e.g., `http://127.0.0.1:8000/sse`)
+1. Start the MCP service using either the executable or Python source code:
+   - Using executable: `mcp-interactive.exe run`
+   - Using Python source: `python main.py run`
+2. Configure the MCP endpoint in the AI tool, choosing either stdio or SSE protocol as needed
 3. Call the appropriate MCP tool when the AI model needs user input or option selection
+
+### Claude Integration
+
+To integrate with Claude in Anthropic's official products or third-party apps:
+
+1. Configure the stdio connection in your AI tool settings:
+   ```json
+   {
+     "mcp-interaction": {
+       "command": "D:/Path/To/Your/mcp-interactive.exe",
+       "args": ["run", "--transport", "stdio", "--ui", "pyqt"],
+       "env": {}
+     }
+   }
+   ```
+
+2. Configure Claude to use the interaction service when needed, with instructions like:
+   - "When you need user input or confirmation, use the MCP interaction service"
+   - "For multiple choice options, call the select_option tool"
+   - "For collecting additional user information, call the request_additional_info tool"
+
+3. Claude will now be able to present options and request additional information directly through the MCP service.
 
 ## Examples
 
@@ -371,6 +443,71 @@ Please note the following status of the implementation:
 - **Linux/Mac**: These platforms have not been thoroughly tested yet. Your experience may vary.
 
 We are actively working on improving compatibility across all platforms and UI types.
+
+## Building and Distribution
+
+### Building Executable Files
+
+This project includes a script to build a standalone executable file for Windows:
+
+```bash
+# Build the Windows executable
+build_executable.bat
+```
+
+This will create `mcp-interactive.exe` in the `dist` directory that you can run without Python installation.
+
+### Cross-Platform Building
+
+To build executables for different platforms:
+
+#### Windows
+```bash
+# Using the batch script
+build_executable.bat
+
+# Or manual PyInstaller command
+pyinstaller mcp-interactive.spec
+```
+
+#### macOS
+```bash
+# Ensure PyInstaller is installed
+pip install pyinstaller
+
+# Build using the spec file
+pyinstaller mcp-interactive.spec
+```
+
+#### Linux
+```bash
+# Ensure PyInstaller is installed
+pip install pyinstaller
+
+# Build using the spec file
+pyinstaller mcp-interactive.spec
+```
+
+Note: You must build on the target platform (you cannot build macOS executables from Windows, etc.)
+
+### Distributing via GitHub
+
+To make your built executables available for download:
+
+1. Create a GitHub release for your project
+2. Upload the built executables as release assets
+3. Provide clear documentation on which executable to use for each platform
+
+Example steps:
+1. Navigate to your GitHub repository
+2. Click on "Releases" in the right sidebar
+3. Click "Create a new release"
+4. Set a version tag (e.g., v1.0.0)
+5. Add a title and description for your release
+6. Drag and drop or upload your executable files for different platforms
+7. Click "Publish release"
+
+Users can then download the appropriate version for their operating system from the GitHub releases page.
 
 ## License
 
