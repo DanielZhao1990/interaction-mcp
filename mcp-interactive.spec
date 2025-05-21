@@ -66,11 +66,11 @@ if platform.system() == 'Windows' and is_github_actions:
     python_dir = os.path.dirname(sys.executable)
     debug_print(f"Python directory: {python_dir}")
     
-    # Add Python DLL explicitly
+    # Add Python DLL explicitly - using "." as destination directory (will be placed in root of dist)
     python_dll = 'python312.dll'
     python_dll_path = os.path.join(python_dir, python_dll)
     if os.path.exists(python_dll_path):
-        extra_binaries.append((python_dll, python_dll_path))
+        extra_binaries.append((os.path.join('.', python_dll), python_dll_path))
         debug_print(f"Added Python DLL: {python_dll}")
     else:
         debug_print(f"Could not find Python DLL: {python_dll}")
