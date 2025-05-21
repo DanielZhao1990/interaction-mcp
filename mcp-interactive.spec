@@ -2,6 +2,7 @@
 import os
 import sys
 import re
+import platform
 
 block_cipher = None
 
@@ -70,10 +71,43 @@ def debug_print(message):
 
 debug_print("Starting PyInstaller configuration")
 
+# Check if we're running in GitHub Actions
+is_github_actions = os.environ.get('GITHUB_ACTIONS') == 'true'
+debug_print(f"Building in GitHub Actions environment: {is_github_actions}")
+
+# Get system info
+debug_print(f"Platform: {platform.platform()}")
+debug_print(f"Python version: {platform.python_version()}")
+
+# Add additional binaries for Windows in CI environment
+extra_binaries = []
+if platform.system() == 'Windows' and is_github_actions:
+    python_dir = os.path.dirname(sys.executable)
+    debug_print(f"Python directory: {python_dir}")
+    
+    # Add critical DLLs explicitly for CI environment
+    dll_names = [
+        'python312.dll',
+        'vcruntime140.dll',
+        'vcruntime140_1.dll',
+        'msvcp140.dll',
+        'python3.dll',
+        'libcrypto-1_1.dll',
+        'libssl-1_1.dll',
+    ]
+    
+    for dll in dll_names:
+        dll_path = os.path.join(python_dir, dll)
+        if os.path.exists(dll_path):
+            extra_binaries.append((dll, dll_path, 'BINARY'))
+            debug_print(f"Added explicit DLL: {dll}")
+        else:
+            debug_print(f"Could not find DLL to include: {dll}")
+
 a = Analysis(
     ['main.py'],
     pathex=[],
-    binaries=[],
+    binaries=extra_binaries,
     datas=added_datas,
     hiddenimports=hidden_imports,
     hookspath=[],
@@ -127,8 +161,11 @@ keep_dlls = [
     'libssl-1_1-x64.dll',
     '_ssl.pyd',
     'python3.dll',
-    'python310.dll',
     'python312.dll',
+    'python310.dll',
+    'vcruntime140.dll',
+    'vcruntime140_1.dll',
+    'msvcp140.dll',
 ]
 
 # Calculate space occupied by large DLLs
@@ -234,8 +271,12 @@ def filter_qt_binaries(binaries_toc):
     
     return filtered_binaries
 
-debug_print("Applying enhanced Qt resource filter...")
-a.binaries = filter_qt_binaries(a.binaries)
+# In GitHub Actions Windows environment, don't filter binaries
+if platform.system() == 'Windows' and is_github_actions:
+    debug_print("Running in GitHub Actions Windows environment - skipping binary filtering")
+else:
+    debug_print("Applying enhanced Qt resource filter...")
+    a.binaries = filter_qt_binaries(a.binaries)
 
 # Check how many Qt-related files remain after filtering
 qt_files_after = count_qt_files(a.binaries)
@@ -271,10 +312,33 @@ def filter_qt_datas(datas_toc):
     
     return filtered_datas
 
-debug_print("Applying Qt data file filter...")
-a.datas = filter_qt_datas(a.datas)
+# In GitHub Actions Windows environment, don't filter data files either
+if platform.system() == 'Windows' and is_github_actions:
+    debug_print("Running in GitHub Actions Windows environment - skipping data file filtering")
+else:
+    debug_print("Applying Qt data file filter...")
+    a.datas = filter_qt_datas(a.datas)
 
 pyz = PYZ(a.pure)
+
+# Additional options for GitHub Actions Windows environment
+exe_options = {}
+if platform.system() == 'Windows' and is_github_actions:
+    debug_print("Setting special EXE options for GitHub Actions Windows environment")
+    exe_options = {
+        'debug': True,
+        'bootloader_ignore_signals': True,
+        'strip': False,  # Disable strip in Windows CI environment
+        'upx': False,    # Disable UPX in Windows CI environment
+    }
+else:
+    exe_options = {
+        'debug': False,
+        'bootloader_ignore_signals': False,
+        'strip': True,  # Enable strip to reduce file size
+        'upx': True,    # Enable UPX compression
+        'upx_exclude': [],
+    }
 
 debug_print("Creating executable...")
 exe = EXE(
@@ -284,11 +348,6 @@ exe = EXE(
     a.datas,
     [],
     name='mcp-interactive',
-    debug=False,
-    bootloader_ignore_signals=False,
-    strip=True,  # Enable strip to reduce file size
-    upx=True,    # Enable UPX compression
-    upx_exclude=[],
     runtime_tmpdir=None,
     console=True,
     disable_windowed_traceback=False,
@@ -297,6 +356,7 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
     icon='icons/app.ico' if os.path.exists('icons/app.ico') else None,
+    **exe_options
 )
 debug_print("Spec file execution completed")
 
