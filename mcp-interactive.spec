@@ -5,33 +5,33 @@ import re
 
 block_cipher = None
 
-# 添加所需数据文件
+# Added data files
 added_datas = [
-    ('locales', 'locales'),  # 语言文件
-    ('web_templates', 'web_templates')  # Web模板文件
+    ('locales', 'locales'),  # Language files
+    ('web_templates', 'web_templates')  # Web template files
 ]
 
-# 定义需要包含的隐藏导入
+# Define hidden imports
 hidden_imports = [
     'fastmcp',
     'ui',
     'ui.ui_cli',
     'ui.ui_pyqt',
-    'ui.ui_web',  # Web界面模块
-    'flask',  # Flask依赖
-    'flask_socketio',  # Flask Socket.IO依赖
-    'ui.test_ui',  # 修正：确保这是正确的模块路径
+    'ui.ui_web',  # Web interface module
+    'flask',  # Flask dependency
+    'flask_socketio',  # Flask Socket.IO dependency
+    'ui.test_ui',  # Fixed: ensure this is the correct module path
     'typer',
     'dotenv',
     'httpx',
     'difflib',
     'pygments',
-    # 添加SSL相关模块
+    # Add SSL-related modules
     'ssl',
     '_ssl',
 ]
 
-# 定义需要排除的模块 - 扩展排除列表
+# Define modules to exclude - extended exclude list
 excludes = [
     'tkinter',
     'ui.ui_psg',
@@ -46,7 +46,7 @@ excludes = [
     'numpy',
     'scipy',
     'pytest',
-    # Qt模块排除 - 更全面的排除
+    # Qt modules exclusion - more comprehensive exclusion
     'PyQt5.QtBluetooth', 'PyQt5.QtDBus', 'PyQt5.QtDesigner', 'PyQt5.QtHelp',
     'PyQt5.QtLocation', 'PyQt5.QtMultimedia', 'PyQt5.QtMultimediaWidgets',
     'PyQt5.QtNetwork', 'PyQt5.QtNetworkAuth', 'PyQt5.QtNfc', 'PyQt5.QtOpenGL',
@@ -56,11 +56,11 @@ excludes = [
     'PyQt5.QtTest', 'PyQt5.QtWebChannel', 'PyQt5.QtWebEngine',
     'PyQt5.QtWebEngineCore', 'PyQt5.QtWebEngineWidgets', 'PyQt5.QtWebSockets',
     'PyQt5.QtXml', 'PyQt5.QtXmlPatterns',
-    # 添加更多不需要的Python库
+    # Add more unnecessary Python libraries
     'PIL', 'wx', 'PyQt6', 'PySide2', 'PySide6',
 ]
 
-# 添加自定义输出函数，确保日志显示
+# Add custom output function to ensure logs are displayed
 def debug_print(message):
     try:
         print(f"\n{'#' * 80}\nDEBUG: {message}\n{'#' * 80}\n")
@@ -79,12 +79,12 @@ a = Analysis(
     hookspath=[],
     hooksconfig={
         'PyQt5': {
-            'plugins': [ # 最小化必需的插件
-                'platforms/qwindows.dll',      # Windows平台支持
-                'styles/qwindowsvistastyle.dll', # Windows视觉样式
+            'plugins': [ # Minimize necessary plugins
+                'platforms/qwindows.dll',      # Windows platform support
+                'styles/qwindowsvistastyle.dll', # Windows visual style
             ],
             'excluded_plugins': [
-                # 排除所有其他插件
+                # Exclude all other plugins
                 'imageformats', 'iconengines', 'platformthemes',
                 'generic', 'mediaservice', 'printsupport', 'sensors', 'sqldrivers',
                 'texttospeech', 'virtualkeyboard', 'webengine',
@@ -99,7 +99,7 @@ a = Analysis(
 
 debug_print("Analysis object created, preparing to filter Qt components")
 
-# 检查二进制文件列表中有多少Qt相关文件
+# Check how many Qt-related files are in the binary list
 def count_qt_files(binaries_toc):
     count = 0
     for dest_path, _, _ in binaries_toc:
@@ -111,7 +111,7 @@ def count_qt_files(binaries_toc):
 qt_files_before = count_qt_files(a.binaries)
 debug_print(f"Analysis object contains {qt_files_before} Qt-related files")
 
-# 需要排除的大型图形DLL文件 (但保留SSL相关文件)
+# Large graphics DLL files to exclude (but keep SSL-related files)
 large_graphics_dlls = [
     'opengl32sw.dll',
     'd3dcompiler_47.dll',
@@ -119,7 +119,7 @@ large_graphics_dlls = [
     'libEGL.dll',
 ]
 
-# 需要保留的DLL文件列表
+# List of DLL files to keep
 keep_dlls = [
     'libcrypto-1_1.dll', 
     'libcrypto-1_1-x64.dll',
@@ -131,7 +131,7 @@ keep_dlls = [
     'python312.dll',
 ]
 
-# 计算大型DLL占用的空间
+# Calculate space occupied by large DLLs
 def calc_large_dll_size(binaries_toc):
     total_size = 0
     found_dlls = []
@@ -160,46 +160,46 @@ def calc_large_dll_size(binaries_toc):
 
 graphics_dll_size = calc_large_dll_size(a.binaries)
 
-# 增强的二进制文件过滤函数
+# Enhanced binary file filtering function
 def filter_qt_binaries(binaries_toc):
     filtered_binaries = []
     excluded_binaries = []
-    qt_dll_pattern = re.compile(r'qt5[a-z]+\.dll', re.IGNORECASE)  # 匹配Qt5的DLL
+    qt_dll_pattern = re.compile(r'qt5[a-z]+\.dll', re.IGNORECASE)  # Match Qt5 DLLs
     
     debug_print(f"Starting binary file filtering, total {len(binaries_toc)} files")
     
     for dest_path, source_path, typecode in binaries_toc:
-        # 规范化路径以便可靠匹配 (处理Windows的反斜杠)
+        # Normalize path for reliable matching (handle Windows backslashes)
         norm_dest_path = dest_path.replace('\\', '/')
         file_name = os.path.basename(norm_dest_path).lower()
         
-        # 过滤条件:
+        # Filter conditions:
         is_excluded = False
         exclusion_reason = ""
         
-        # 0. 保留特定的DLL文件 (如OpenSSL相关文件)
+        # 0. Keep specific DLL files (such as OpenSSL-related files)
         if file_name in [dll.lower() for dll in keep_dlls]:
             filtered_binaries.append((dest_path, source_path, typecode))
             continue
             
-        # 0. 排除大型图形DLL (优先检查以提升可读性)
+        # 0. Exclude large graphics DLLs (priority check for readability)
         if file_name in [dll.lower() for dll in large_graphics_dlls]:
             is_excluded = True
             exclusion_reason = f"Large graphics DLL ({os.path.getsize(source_path) / (1024*1024):.2f} MB)"
         
-        # 1. 排除所有Qt翻译文件
+        # 1. Exclude all Qt translation files
         elif 'translations/' in norm_dest_path or 'translations\\' in norm_dest_path:
             is_excluded = True
             exclusion_reason = "Qt translation file"
         
-        # 2. 排除不需要的Qt DLL (只保留核心组件)
+        # 2. Exclude unnecessary Qt DLLs (keep only core components)
         elif qt_dll_pattern.search(norm_dest_path.lower()):
-            # 保留核心Qt组件
+            # Keep core Qt components
             if not any(core_mod in norm_dest_path.lower() for core_mod in ['qt5core', 'qt5gui', 'qt5widgets']):
                 is_excluded = True
                 exclusion_reason = "Non-core Qt DLL"
         
-        # 3. 排除不需要的插件目录
+        # 3. Exclude unnecessary plugin directories
         qt_plugin_dirs = [
             'imageformats', 'iconengines', 'bearer', 'audio', 'geoservices',
             'mediaservice', 'playlistformats', 'position', 'printsupport',
@@ -209,9 +209,9 @@ def filter_qt_binaries(binaries_toc):
         
         for plugin_dir in qt_plugin_dirs:
             if f'plugins/{plugin_dir}' in norm_dest_path or f'plugins\\{plugin_dir}' in norm_dest_path:
-                # 但保留必需的Windows平台插件
+                # But keep necessary Windows platform plugins
                 if 'platforms/qwindows' in norm_dest_path or 'styles/qwindowsvistastyle' in norm_dest_path:
-                    break  # 保留这些文件
+                    break  # Keep these files
                 
                 is_excluded = True
                 exclusion_reason = f"Qt plugin: {plugin_dir}"
@@ -222,7 +222,7 @@ def filter_qt_binaries(binaries_toc):
         else:
             filtered_binaries.append((dest_path, source_path, typecode))
     
-    # 输出排除的文件列表
+    # Output excluded file list
     debug_print(f"Filtering completed: Kept {len(filtered_binaries)} files, excluded {len(excluded_binaries)} files")
     if excluded_binaries:
         debug_print("Excluded files list (first 20):")
@@ -237,11 +237,11 @@ def filter_qt_binaries(binaries_toc):
 debug_print("Applying enhanced Qt resource filter...")
 a.binaries = filter_qt_binaries(a.binaries)
 
-# 检查过滤后还有多少Qt相关文件
+# Check how many Qt-related files remain after filtering
 qt_files_after = count_qt_files(a.binaries)
 debug_print(f"After filtering, {qt_files_after} Qt-related files remain")
 
-# 也过滤掉Qt相关的数据文件
+# Also filter Qt-related data files
 def filter_qt_datas(datas_toc):
     filtered_datas = []
     excluded_datas = []
@@ -251,7 +251,7 @@ def filter_qt_datas(datas_toc):
     for dest_path, source_path, typecode in datas_toc:
         norm_dest_path = dest_path.replace('\\', '/')
         
-        # 排除Qt资源、翻译等
+        # Exclude Qt resources, translations, etc.
         is_excluded = False
         if 'PyQt5/Qt5/resources' in norm_dest_path or 'PyQt5/Qt5/translations' in norm_dest_path:
             is_excluded = True
@@ -280,14 +280,14 @@ debug_print("Creating executable...")
 exe = EXE(
     pyz,
     a.scripts,
-    a.binaries, # 使用过滤后的二进制列表
+    a.binaries, # Use filtered binary list
     a.datas,
     [],
     name='mcp-interactive',
     debug=False,
     bootloader_ignore_signals=False,
-    strip=True,  # 启用strip以减小文件大小
-    upx=True,    # 启用UPX压缩
+    strip=True,  # Enable strip to reduce file size
+    upx=True,    # Enable UPX compression
     upx_exclude=[],
     runtime_tmpdir=None,
     console=True,

@@ -2,55 +2,55 @@
 # -*- coding: utf-8 -*-
 
 """
-测试SSL模块导入和功能是否正常工作
-这个脚本可以在打包前或打包后运行，以确保SSL相关功能正常工作
+SSL module import and functionality test
+This script can be run before or after packaging to ensure SSL-related functions work properly
 """
 
 import sys
 import os
 
 def test_ssl_import():
-    """测试SSL模块是否可以正常导入"""
-    print("Python版本:", sys.version)
-    print("Python路径:", sys.executable)
+    """Test if SSL module can be imported correctly"""
+    print("Python version:", sys.version)
+    print("Python path:", sys.executable)
     
     try:
         import ssl
-        print("成功导入SSL模块")
-        print("SSL版本:", ssl.OPENSSL_VERSION)
+        print("Successfully imported SSL module")
+        print("SSL version:", ssl.OPENSSL_VERSION)
         return True
     except ImportError as e:
-        print("SSL模块导入失败:", str(e))
+        print("Failed to import SSL module:", str(e))
         return False
 
 def test_https_request():
-    """测试HTTPS请求是否可以正常工作"""
+    """Test if HTTPS requests work properly"""
     try:
         import urllib.request
-        # 尝试访问一个HTTPS网站
+        # Try to access an HTTPS website
         response = urllib.request.urlopen('https://www.python.org')
-        print("HTTPS请求成功")
-        print("响应状态:", response.status)
+        print("HTTPS request successful")
+        print("Response status:", response.status)
         return True
     except Exception as e:
-        print("HTTPS请求失败:", str(e))
+        print("HTTPS request failed:", str(e))
         return False
 
 if __name__ == "__main__":
     print("=" * 50)
-    print("开始SSL测试")
+    print("Starting SSL test")
     print("=" * 50)
     
     ssl_import_ok = test_ssl_import()
     https_request_ok = test_https_request()
     
     print("=" * 50)
-    print("测试结果:")
-    print("SSL模块导入:", "成功" if ssl_import_ok else "失败")
-    print("HTTPS请求:", "成功" if https_request_ok else "失败")
+    print("Test results:")
+    print("SSL module import:", "Success" if ssl_import_ok else "Failed")
+    print("HTTPS request:", "Success" if https_request_ok else "Failed")
     print("=" * 50)
     
-    # 如果任一测试失败，则程序退出码为1
+    # If any test fails, exit with code 1
     if not (ssl_import_ok and https_request_ok):
         sys.exit(1)
     
