@@ -4,6 +4,25 @@ on:
   release:
     types: [created]
   workflow_dispatch:
+    inputs:
+      upload_to_release:
+        description: 'Upload to latest release'
+        required: true
+        default: 'false'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+      platforms:
+        description: 'Platforms to build'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - 'all'
+          - 'windows'
+          - 'macos'
+          - 'linux'
 
 # Add top-level permission configuration, ensure write access to content and packages
 permissions:
@@ -13,6 +32,7 @@ permissions:
 jobs:
   build-windows:
     runs-on: windows-latest
+    if: github.event.inputs.platforms == 'all' || github.event.inputs.platforms == 'windows' || github.event_name == 'release'
     env:
       GITHUB_ACTIONS: true
     steps:
@@ -59,9 +79,21 @@ jobs:
         with:
           name: mcp-interactive-windows
           path: dist/mcp-interactive.exe
+      - name: Compress Windows artifact
+        run: |
+          cd dist
+          powershell Compress-Archive -Path mcp-interactive.exe -DestinationPath mcp-interactive-windows.zip
+      - name: Upload to latest release
+        if: (github.event_name == 'workflow_dispatch' && github.event.inputs.upload_to_release == 'true') || github.event_name == 'release'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/mcp-interactive-windows.zip
+          tag_name: ${{ github.event_name == 'release' && github.event.release.tag_name || 'latest' }}
+          fail_on_unmatched_files: false
 
   build-macos:
     runs-on: macos-latest
+    if: github.event.inputs.platforms == 'all' || github.event.inputs.platforms == 'macos' || github.event_name == 'release'
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python
@@ -88,9 +120,21 @@ jobs:
         with:
           name: mcp-interactive-macos
           path: dist/mcp-interactive
+      - name: Compress macOS artifact
+        run: |
+          cd dist
+          zip -r mcp-interactive-macos.zip mcp-interactive
+      - name: Upload to latest release
+        if: (github.event_name == 'workflow_dispatch' && github.event.inputs.upload_to_release == 'true') || github.event_name == 'release'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/mcp-interactive-macos.zip
+          tag_name: ${{ github.event_name == 'release' && github.event.release.tag_name || 'latest' }}
+          fail_on_unmatched_files: false
 
   build-linux:
     runs-on: ubuntu-latest
+    if: github.event.inputs.platforms == 'all' || github.event.inputs.platforms == 'linux' || github.event_name == 'release'
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python
@@ -119,38 +163,14 @@ jobs:
         with:
           name: mcp-interactive-linux
           path: dist/mcp-interactive
-
-  create-release-assets:
-    needs: [build-windows, build-macos, build-linux]
-    runs-on: ubuntu-latest
-    if: github.event_name == 'release'
-    steps:
-      - name: Download Windows artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: mcp-interactive-windows
-          path: windows
-      - name: Download macOS artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: mcp-interactive-macos
-          path: macos
-      - name: Download Linux artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: mcp-interactive-linux
-          path: linux
-      - name: Compress artifacts
+      - name: Compress Linux artifact
         run: |
-          zip -r mcp-interactive-windows.zip windows
-          zip -r mcp-interactive-macos.zip macos
-          zip -r mcp-interactive-linux.zip linux
-      - name: Upload release assets
+          cd dist
+          zip -r mcp-interactive-linux.zip mcp-interactive
+      - name: Upload to latest release
+        if: (github.event_name == 'workflow_dispatch' && github.event.inputs.upload_to_release == 'true') || github.event_name == 'release'
         uses: softprops/action-gh-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          files: |
-            mcp-interactive-windows.zip
-            mcp-interactive-macos.zip
-            mcp-interactive-linux.zip 
+          files: dist/mcp-interactive-linux.zip
+          tag_name: ${{ github.event_name == 'release' && github.event.release.tag_name || 'latest' }}
+          fail_on_unmatched_files: false 
