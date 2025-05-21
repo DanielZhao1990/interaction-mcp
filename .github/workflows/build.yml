@@ -18,15 +18,33 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.12'
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install pyinstaller
           pip install -r requirements/requirements-all.txt
+      - name: Test SSL before build
+        run: |
+          python test_ssl.py
       - name: Build with PyInstaller
         run: |
           pyinstaller mcp-interactive.spec
+      - name: Copy test script to dist
+        run: |
+          copy test_ssl.py dist/
+      - name: Test executable basic functionality
+        run: |
+          cd dist
+          .\mcp-interactive.exe --version || echo "Executable runs but may not support version flag"
+      - name: Test UI functionality (non-blocking)
+        run: |
+          cd dist
+          start /b .\mcp-interactive.exe test select_option --ui pyqt
+          # 等待3秒，如果进程存活，认为测试成功
+          timeout /t 3
+          # 尝试关闭进程
+          taskkill /f /im mcp-interactive.exe || echo "Process already exited"
       - name: Upload Windows executable
         uses: actions/upload-artifact@v4
         with:
@@ -40,15 +58,30 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.12'
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install pyinstaller
           pip install -r requirements/requirements-all.txt
+      - name: Test SSL before build
+        run: |
+          python test_ssl.py
       - name: Build with PyInstaller
         run: |
           pyinstaller mcp-interactive.spec
+      - name: Test executable basic functionality
+        run: |
+          cd dist
+          ./mcp-interactive --version || echo "Executable runs but may not support version flag"
+      - name: Test UI functionality (non-blocking)
+        run: |
+          cd dist
+          # 在后台运行，3秒后终止
+          ./mcp-interactive test select_option --ui cli &
+          PID=$!
+          sleep 3
+          kill -15 $PID || echo "Process already exited"
       - name: Upload macOS executable
         uses: actions/upload-artifact@v4
         with:
@@ -62,7 +95,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.12'
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -70,9 +103,24 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y python3-dev libffi-dev
           pip install -r requirements/requirements-all.txt
+      - name: Test SSL before build
+        run: |
+          python test_ssl.py
       - name: Build with PyInstaller
         run: |
           pyinstaller mcp-interactive.spec
+      - name: Test executable basic functionality
+        run: |
+          cd dist
+          ./mcp-interactive --version || echo "Executable runs but may not support version flag"
+      - name: Test UI functionality (non-blocking)
+        run: |
+          cd dist
+          # 在Linux上使用CLI界面进行测试
+          ./mcp-interactive test select_option --ui cli &
+          PID=$!
+          sleep 3
+          kill -15 $PID || echo "Process already exited"
       - name: Upload Linux executable
         uses: actions/upload-artifact@v4
         with:

@@ -26,6 +26,9 @@ hidden_imports = [
     'httpx',
     'difflib',
     'pygments',
+    # 添加SSL相关模块
+    'ssl',
+    '_ssl',
 ]
 
 # 定义需要排除的模块 - 扩展排除列表
@@ -108,12 +111,24 @@ def count_qt_files(binaries_toc):
 qt_files_before = count_qt_files(a.binaries)
 debug_print(f"Analysis object contains {qt_files_before} Qt-related files")
 
-# 需要排除的大型图形DLL文件
+# 需要排除的大型图形DLL文件 (但保留SSL相关文件)
 large_graphics_dlls = [
     'opengl32sw.dll',
     'd3dcompiler_47.dll',
     'libGLESv2.dll',
     'libEGL.dll',
+]
+
+# 需要保留的DLL文件列表
+keep_dlls = [
+    'libcrypto-1_1.dll', 
+    'libcrypto-1_1-x64.dll',
+    'libssl-1_1.dll', 
+    'libssl-1_1-x64.dll',
+    '_ssl.pyd',
+    'python3.dll',
+    'python310.dll',
+    'python312.dll',
 ]
 
 # 计算大型DLL占用的空间
@@ -162,6 +177,11 @@ def filter_qt_binaries(binaries_toc):
         is_excluded = False
         exclusion_reason = ""
         
+        # 0. 保留特定的DLL文件 (如OpenSSL相关文件)
+        if file_name in [dll.lower() for dll in keep_dlls]:
+            filtered_binaries.append((dest_path, source_path, typecode))
+            continue
+            
         # 0. 排除大型图形DLL (优先检查以提升可读性)
         if file_name in [dll.lower() for dll in large_graphics_dlls]:
             is_excluded = True
