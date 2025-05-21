@@ -59,9 +59,13 @@ excludes = [
 
 # 添加自定义输出函数，确保日志显示
 def debug_print(message):
-    print(f"\n{'#' * 80}\nDEBUG: {message}\n{'#' * 80}\n")
+    try:
+        print(f"\n{'#' * 80}\nDEBUG: {message}\n{'#' * 80}\n")
+    except UnicodeEncodeError:
+        # Fallback to ASCII if terminal encoding doesn't support Unicode
+        print(f"\n{'#' * 80}\nDEBUG: [Unicode message - encoding error]\n{'#' * 80}\n")
 
-debug_print("开始设置PyInstaller配置")
+debug_print("Starting PyInstaller configuration")
 
 a = Analysis(
     ['main.py'],
@@ -90,7 +94,7 @@ a = Analysis(
     optimize=0,
 )
 
-debug_print("Analysis对象创建完成，准备过滤Qt组件")
+debug_print("Analysis object created, preparing to filter Qt components")
 
 # 检查二进制文件列表中有多少Qt相关文件
 def count_qt_files(binaries_toc):
@@ -102,7 +106,7 @@ def count_qt_files(binaries_toc):
     return count
 
 qt_files_before = count_qt_files(a.binaries)
-debug_print(f"Analysis对象中共有 {qt_files_before} 个Qt相关文件")
+debug_print(f"Analysis object contains {qt_files_before} Qt-related files")
 
 # 需要排除的大型图形DLL文件
 large_graphics_dlls = [
@@ -127,15 +131,15 @@ def calc_large_dll_size(binaries_toc):
                 break
                 
     if found_dlls:
-        debug_print(f"发现以下大型图形DLL文件:")
+        debug_print(f"Found the following large graphics DLL files:")
         for dll, size in found_dlls:
             size_mb = size / (1024 * 1024)
-            print(f"- {dll}: {size:,} 字节 ({size_mb:.2f} MB)")
+            print(f"- {dll}: {size:,} bytes ({size_mb:.2f} MB)")
         
         total_mb = total_size / (1024 * 1024)
-        debug_print(f"这些DLL总共占用 {total_size:,} 字节 ({total_mb:.2f} MB)")
+        debug_print(f"These DLLs occupy a total of {total_size:,} bytes ({total_mb:.2f} MB)")
     else:
-        debug_print("未找到待排除的大型图形DLL文件")
+        debug_print("No large graphics DLLs found to exclude")
         
     return total_size
 
@@ -147,7 +151,7 @@ def filter_qt_binaries(binaries_toc):
     excluded_binaries = []
     qt_dll_pattern = re.compile(r'qt5[a-z]+\.dll', re.IGNORECASE)  # 匹配Qt5的DLL
     
-    debug_print(f"开始过滤二进制文件，共 {len(binaries_toc)} 个文件")
+    debug_print(f"Starting binary file filtering, total {len(binaries_toc)} files")
     
     for dest_path, source_path, typecode in binaries_toc:
         # 规范化路径以便可靠匹配 (处理Windows的反斜杠)
@@ -161,19 +165,19 @@ def filter_qt_binaries(binaries_toc):
         # 0. 排除大型图形DLL (优先检查以提升可读性)
         if file_name in [dll.lower() for dll in large_graphics_dlls]:
             is_excluded = True
-            exclusion_reason = f"大型图形DLL ({os.path.getsize(source_path) / (1024*1024):.2f} MB)"
+            exclusion_reason = f"Large graphics DLL ({os.path.getsize(source_path) / (1024*1024):.2f} MB)"
         
         # 1. 排除所有Qt翻译文件
         elif 'translations/' in norm_dest_path or 'translations\\' in norm_dest_path:
             is_excluded = True
-            exclusion_reason = "Qt翻译文件"
+            exclusion_reason = "Qt translation file"
         
         # 2. 排除不需要的Qt DLL (只保留核心组件)
         elif qt_dll_pattern.search(norm_dest_path.lower()):
             # 保留核心Qt组件
             if not any(core_mod in norm_dest_path.lower() for core_mod in ['qt5core', 'qt5gui', 'qt5widgets']):
                 is_excluded = True
-                exclusion_reason = "非核心Qt DLL"
+                exclusion_reason = "Non-core Qt DLL"
         
         # 3. 排除不需要的插件目录
         qt_plugin_dirs = [
@@ -190,7 +194,7 @@ def filter_qt_binaries(binaries_toc):
                     break  # 保留这些文件
                 
                 is_excluded = True
-                exclusion_reason = f"Qt插件: {plugin_dir}"
+                exclusion_reason = f"Qt plugin: {plugin_dir}"
                 break
                 
         if is_excluded:
@@ -199,30 +203,30 @@ def filter_qt_binaries(binaries_toc):
             filtered_binaries.append((dest_path, source_path, typecode))
     
     # 输出排除的文件列表
-    debug_print(f"过滤完成: 保留 {len(filtered_binaries)} 个文件，排除 {len(excluded_binaries)} 个文件")
+    debug_print(f"Filtering completed: Kept {len(filtered_binaries)} files, excluded {len(excluded_binaries)} files")
     if excluded_binaries:
-        debug_print("排除的文件列表(前20个):")
+        debug_print("Excluded files list (first 20):")
         for i, (path, reason) in enumerate(excluded_binaries[:20], 1):
-            print(f"{i}. {path} - 原因: {reason}")
+            print(f"{i}. {path} - Reason: {reason}")
         
         if len(excluded_binaries) > 20:
-            print(f"... 还有 {len(excluded_binaries) - 20} 个文件被排除 ...")
+            print(f"... {len(excluded_binaries) - 20} more files excluded ...")
     
     return filtered_binaries
 
-debug_print("应用增强的Qt资源过滤器...")
+debug_print("Applying enhanced Qt resource filter...")
 a.binaries = filter_qt_binaries(a.binaries)
 
 # 检查过滤后还有多少Qt相关文件
 qt_files_after = count_qt_files(a.binaries)
-debug_print(f"过滤后还剩 {qt_files_after} 个Qt相关文件")
+debug_print(f"After filtering, {qt_files_after} Qt-related files remain")
 
 # 也过滤掉Qt相关的数据文件
 def filter_qt_datas(datas_toc):
     filtered_datas = []
     excluded_datas = []
     
-    debug_print(f"开始过滤数据文件，共 {len(datas_toc)} 个文件")
+    debug_print(f"Starting data file filtering, total {len(datas_toc)} files")
     
     for dest_path, source_path, typecode in datas_toc:
         norm_dest_path = dest_path.replace('\\', '/')
@@ -236,23 +240,23 @@ def filter_qt_datas(datas_toc):
         if not is_excluded:
             filtered_datas.append((dest_path, source_path, typecode))
     
-    debug_print(f"数据文件过滤完成: 保留 {len(filtered_datas)} 个文件，排除 {len(excluded_datas)} 个文件")
+    debug_print(f"Data file filtering completed: Kept {len(filtered_datas)} files, excluded {len(excluded_datas)} files")
     if excluded_datas:
-        debug_print("排除的数据文件列表(前10个):")
+        debug_print("Excluded data files list (first 10):")
         for i, path in enumerate(excluded_datas[:10], 1):
             print(f"{i}. {path}")
         
         if len(excluded_datas) > 10:
-            print(f"... 还有 {len(excluded_datas) - 10} 个文件被排除 ...")
+            print(f"... {len(excluded_datas) - 10} more files excluded ...")
     
     return filtered_datas
 
-debug_print("应用Qt数据文件过滤器...")
+debug_print("Applying Qt data file filter...")
 a.datas = filter_qt_datas(a.datas)
 
 pyz = PYZ(a.pure)
 
-debug_print("创建可执行文件...")
+debug_print("Creating executable...")
 exe = EXE(
     pyz,
     a.scripts,
@@ -274,5 +278,5 @@ exe = EXE(
     entitlements_file=None,
     icon='icons/app.ico' if os.path.exists('icons/app.ico') else None,
 )
-debug_print("spec文件执行完毕")
+debug_print("Spec file execution completed")
 
