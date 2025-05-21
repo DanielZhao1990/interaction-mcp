@@ -75,7 +75,20 @@ This project supports three different user interface types, each with its own ch
 
 1. Download the latest pre-compiled executable from the [GitHub Releases](https://github.com/DanielZhao1990/interaction-mcp/releases) page.
 2. No installation required - simply download and run the executable.
-3. Skip to step 3 below for configuration.
+3. You can test the functionality using these commands:
+
+```bash
+# Test option selection with PyQt interface
+.\dist\mcp-interactive.exe test select_option --ui pyqt
+
+# Test information supplement with PyQt interface
+.\dist\mcp-interactive.exe test request_additional_info --ui pyqt
+
+# You can also specify a file path for testing the request_additional_info tool
+.\dist\mcp-interactive.exe test request_additional_info --ui pyqt D:\Path\To\Your\File.md
+```
+
+4. Skip to step 3 below for configuration.
 
 #### Option B: Install from Source Code
 
@@ -271,6 +284,8 @@ python main.py test select_option --ui=cli
 # Test information supplement tool
 python main.py test request_additional_info --ui=cli
 ```
+
+
 
 #### Interactive Test Client
 

@@ -75,7 +75,20 @@
 
 1. 从[GitHub Releases](https://github.com/DanielZhao1990/interaction-mcp/releases)页面下载最新的预编译可执行文件。
 2. 无需安装 - 只需下载并运行可执行文件。
-3. 跳到下面的步骤3进行配置。
+3. 您可以使用以下命令测试功能：
+
+```bash
+# 使用PyQt界面测试选项选择
+.\dist\mcp-interactive.exe test select_option --ui pyqt
+
+# 使用PyQt界面测试信息补充
+.\dist\mcp-interactive.exe test request_additional_info --ui pyqt
+
+# 您还可以为request_additional_info工具指定文件路径进行测试
+.\dist\mcp-interactive.exe test request_additional_info --ui pyqt D:\Path\To\Your\File.md
+```
+
+4. 跳到下面的步骤3进行配置。
 
 #### 选项B：从源代码安装
 
@@ -271,6 +284,8 @@ python main.py test select_option --ui=cli
 # 测试信息补充工具
 python main.py test request_additional_info --ui=cli
 ```
+
+
 
 #### 交互式测试客户端
 
