@@ -5,6 +5,11 @@ on:
     types: [created]
   workflow_dispatch:
 
+# 添加顶级权限配置，确保有写入内容和发布的权限
+permissions:
+  contents: write
+  packages: write
+
 jobs:
   build-windows:
     runs-on: windows-latest
@@ -101,6 +106,8 @@ jobs:
           zip -r mcp-interactive-linux.zip linux
       - name: Upload release assets
         uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           files: |
             mcp-interactive-windows.zip
