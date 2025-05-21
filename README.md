@@ -143,26 +143,26 @@ Start different UI response methods:
 
 ```bash
 # Command line interface (default)
-python main.py run --ui-type=cli
+python main.py run --ui=cli
 
 # Web interface
-python main.py run --ui-type=web
+python main.py run --ui=web
 
 # PyQt interface
-python main.py run --ui-type=pyqt
+python main.py run --ui=pyqt
 ```
 
 Other service startup options:
 
 ```bash
-# Start the service with default settings (address: 127.0.0.1, port: 8000)
+# Start the service with default settings (address: 127.0.0.1, port: 7888)
 python main.py run
 
 # Specify host and port
 python main.py run --host 0.0.0.0 --port 8888
 
 # Specify log level
-python main.py run --log-level debug
+python main.py run --log-level warning
 ```
 
 ### 3. Configure Cursor or Windsurf
@@ -182,7 +182,7 @@ Configuration example:
 {
   "ai-interaction": {
     "command": "python",
-    "args": ["path/to/main.py", "run", "--transport", "stdio", "--ui-type", "cli"],
+    "args": ["path/to/main.py", "run", "--transport", "stdio", "--ui", "cli"],
     "env": {}
   }
 }
@@ -246,10 +246,10 @@ python main.py list-tools
 
 ```bash
 # Test option selection tool
-python main.py test select_option
+python main.py test select_option --ui=cli
 
 # Test information supplement tool
-python main.py test request_additional_info
+python main.py test request_additional_info --ui=cli
 ```
 
 #### Interactive Test Client
@@ -300,13 +300,13 @@ For more details, see the [STDIO Testing Guide](README_STDIO_TEST.md).
 
 ```bash
 # Test PyQt interface
-python test_ui.py --ui-type=pyqt
+python test_ui.py --ui=pyqt
 
 # Test Web interface
-python test_ui.py --ui-type=web
+python test_ui.py --ui=web
 
 # Test CLI interface
-python test_ui.py --ui-type=cli
+python test_ui.py --ui=cli
 ```
 
 ## Tool Description
@@ -399,6 +399,71 @@ Please note the following status of the implementation:
 - **Linux/Mac**: These platforms have not been thoroughly tested yet. Your experience may vary.
 
 We are actively working on improving compatibility across all platforms and UI types.
+
+## Building and Distribution
+
+### Building Executable Files
+
+This project includes a script to build a standalone executable file for Windows:
+
+```bash
+# Build the Windows executable
+build_executable.bat
+```
+
+This will create `mcp-interactive.exe` in the `dist` directory that you can run without Python installation.
+
+### Cross-Platform Building
+
+To build executables for different platforms:
+
+#### Windows
+```bash
+# Using the batch script
+build_executable.bat
+
+# Or manual PyInstaller command
+pyinstaller mcp-interactive.spec
+```
+
+#### macOS
+```bash
+# Ensure PyInstaller is installed
+pip install pyinstaller
+
+# Build using the spec file
+pyinstaller mcp-interactive.spec
+```
+
+#### Linux
+```bash
+# Ensure PyInstaller is installed
+pip install pyinstaller
+
+# Build using the spec file
+pyinstaller mcp-interactive.spec
+```
+
+Note: You must build on the target platform (you cannot build macOS executables from Windows, etc.)
+
+### Distributing via GitHub
+
+To make your built executables available for download:
+
+1. Create a GitHub release for your project
+2. Upload the built executables as release assets
+3. Provide clear documentation on which executable to use for each platform
+
+Example steps:
+1. Navigate to your GitHub repository
+2. Click on "Releases" in the right sidebar
+3. Click "Create a new release"
+4. Set a version tag (e.g., v1.0.0)
+5. Add a title and description for your release
+6. Drag and drop or upload your executable files for different platforms
+7. Click "Publish release"
+
+Users can then download the appropriate version for their operating system from the GitHub releases page.
 
 ## License
 

@@ -7,10 +7,22 @@ PyQt Interface Implementation
 
 import asyncio
 import sys
-import os
 import logging
-from typing import List, Dict, Any, Optional, Union, cast, TypeVar
+import traceback
+from typing import List, Dict, Any, Optional, Union
 from fastmcp import Context
+
+# Import PyQt5 modules (if available)
+try:
+    from PyQt5.QtWidgets import (
+        QApplication, QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, 
+        QListWidget, QListWidgetItem, QCheckBox, QLineEdit, QTextEdit, QPlainTextEdit,
+        QGroupBox, QRadioButton, QButtonGroup
+    )
+    from PyQt5.QtCore import QObject, pyqtSignal, Qt
+    PYQT_AVAILABLE = True
+except ImportError:
+    PYQT_AVAILABLE = False
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG, 
@@ -21,16 +33,8 @@ logger = logging.getLogger('PyQtUI')
 # Define Context type alias, making it optional
 ContextType = Optional[Context]
 
-try:
-    from PyQt5.QtWidgets import (
-        QApplication, QMainWindow, QDialog, QVBoxLayout, QHBoxLayout,
-        QLabel, QRadioButton, QLineEdit, QTextEdit, QPushButton,
-        QGroupBox, QButtonGroup, QMessageBox, QScrollArea, QWidget, QFrame
-    )
-    from PyQt5.QtCore import Qt, QObject, pyqtSignal
-    from PyQt5.QtGui import QFont
-except ImportError:
-    # If PyQt5 is not installed, provide a placeholder class
+# If PyQt5 is not installed, provide a placeholder class
+if not PYQT_AVAILABLE:
     class PyQtUIMissingDeps:
         """PyQt Interface Implementation Class (PyQt5 not installed)"""
         
@@ -118,10 +122,6 @@ else:
             # Run QT window in separate thread
             def run_qt_dialog():
                 try:
-                    from PyQt5.QtWidgets import QApplication, QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QListWidget, \
-                                                QListWidgetItem, QCheckBox, QLineEdit, QGroupBox, QRadioButton, QButtonGroup
-                    from PyQt5.QtCore import Qt
-                    
                     app = None
                     if not QApplication.instance():
                         app = QApplication([])
@@ -180,9 +180,11 @@ else:
                             self.option_group.addButton(self.custom_radio, -1)
                             custom_layout.addWidget(self.custom_radio)
                             
-                            self.custom_input = QLineEdit()
+                            # Changed from QLineEdit to QPlainTextEdit for multi-line input
+                            self.custom_input = QPlainTextEdit()
                             self.custom_input.setPlaceholderText("Enter your custom answer here")
                             self.custom_input.setEnabled(False)  # Initially disabled
+                            self.custom_input.setMinimumHeight(100)  # Set minimum height for multi-line input
                             
                             # Connect custom radio button event
                             self.custom_radio.toggled.connect(self.toggle_custom_input)
@@ -214,11 +216,11 @@ else:
                             selected_id = self.option_group.checkedId()
                             
                             if selected_id == -1 and self.custom_radio.isChecked():
-                                # User chose custom input
+                                # User chose custom input - get text from QPlainTextEdit
                                 return {
                                     "selected_index": -1,
                                     "selected_option": None,
-                                    "custom_input": self.custom_input.text(),
+                                    "custom_input": self.custom_input.toPlainText(),
                                     "is_custom": True
                                 }
                             elif selected_id >= 0:
@@ -259,7 +261,6 @@ else:
                         app.quit()
                     
                 except Exception as e:
-                    import traceback
                     logger.error(f"PyQt dialog error: {e}")
                     logger.error(traceback.format_exc())
                     on_selection_completed({
@@ -340,9 +341,6 @@ else:
             # Run QT window in separate thread
             def run_qt_dialog():
                 try:
-                    from PyQt5.QtWidgets import QApplication, QDialog, QVBoxLayout, QPushButton, QLabel, QTextEdit, QPlainTextEdit
-                    from PyQt5.QtCore import Qt
-                    
                     app = None
                     if not QApplication.instance():
                         app = QApplication([])
@@ -374,15 +372,16 @@ else:
                                 info_display = QTextEdit()
                                 info_display.setReadOnly(True)
                                 info_display.setPlainText(current_info)
-                                info_display.setMaximumHeight(100)
+                                info_display.setMaximumHeight(150)
                                 layout.addWidget(info_display)
                             
                             # Add input label
                             input_label = QLabel("Please enter information:")
                             layout.addWidget(input_label)
                             
-                            # Create text input widget (always multiline)
+                            # Create text input widget (multi-line)
                             self.input_field = QPlainTextEdit()
+                            self.input_field.setMinimumHeight(150)  # Ensure good height for multi-line input
                             layout.addWidget(self.input_field)
                             
                             # Add buttons
@@ -408,7 +407,6 @@ else:
                         app.quit()
                     
                 except Exception as e:
-                    import traceback
                     logger.error(f"PyQt dialog error: {e}")
                     logger.error(traceback.format_exc())
                     on_input_completed(f"Error: {str(e)}")

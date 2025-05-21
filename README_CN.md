@@ -143,26 +143,26 @@ uv pip install -e ".[all]"      # 所有 UI 类型
 
 ```bash
 # 命令行界面（默认）
-python main.py run --ui-type=cli
+python main.py run --ui=cli
 
 # Web 界面
-python main.py run --ui-type=web
+python main.py run --ui=web
 
 # PyQt 界面
-python main.py run --ui-type=pyqt
+python main.py run --ui=pyqt
 ```
 
 其他服务启动选项：
 
 ```bash
-# 使用默认设置启动服务（地址：127.0.0.1，端口：8000）
+# 使用默认设置启动服务（地址：127.0.0.1，端口：7888）
 python main.py run
 
 # 指定主机和端口
 python main.py run --host 0.0.0.0 --port 8888
 
 # 指定日志级别
-python main.py run --log-level debug
+python main.py run --log-level warning
 ```
 
 ### 3. 配置 Cursor 或 Windsurf
@@ -182,7 +182,7 @@ stdio 协议是最稳定和推荐的连接方式，它通过标准输入/输出�
 {
   "ai-interaction": {
     "command": "python",
-    "args": ["path/to/main.py", "run", "--transport", "stdio", "--ui-type", "cli"],
+    "args": ["path/to/main.py", "run", "--transport", "stdio", "--ui", "cli"],
     "env": {}
   }
 }
@@ -246,10 +246,10 @@ python main.py list-tools
 
 ```bash
 # 测试选项选择工具
-python main.py test select_option
+python main.py test select_option --ui=cli
 
 # 测试信息补充工具
-python main.py test request_additional_info
+python main.py test request_additional_info --ui=cli
 ```
 
 #### 交互式测试客户端
@@ -300,13 +300,13 @@ python mcp_client_stdio.py --test=select_option
 
 ```bash
 # 测试 PyQt 界面
-python test_ui.py --ui-type=pyqt
+python test_ui.py --ui=pyqt
 
 # 测试 Web 界面
-python test_ui.py --ui-type=web
+python test_ui.py --ui=web
 
 # 测试 CLI 界面
-python test_ui.py --ui-type=cli
+python test_ui.py --ui=cli
 ```
 
 ## 工具描述
@@ -399,6 +399,71 @@ async with Client("http://127.0.0.1:8000/sse") as client:
 - **Linux/Mac**：这些平台尚未经过全面测试。您的体验可能会有所不同。
 
 我们正在积极改进所有平台和 UI 类型的兼容性。
+
+## 构建与分发
+
+### 构建可执行文件
+
+本项目包含一个用于构建 Windows 独立可执行文件的脚本：
+
+```bash
+# 构建 Windows 可执行文件
+build_executable.bat
+```
+
+这将在 `dist` 目录中创建 `mcp-interactive.exe`，您可以在没有 Python 安装的情况下运行它。
+
+### 跨平台构建
+
+为不同平台构建可执行文件：
+
+#### Windows
+```bash
+# 使用批处理脚本
+build_executable.bat
+
+# 或手动 PyInstaller 命令
+pyinstaller mcp-interactive.spec
+```
+
+#### macOS
+```bash
+# 确保已安装 PyInstaller
+pip install pyinstaller
+
+# 使用 spec 文件构建
+pyinstaller mcp-interactive.spec
+```
+
+#### Linux
+```bash
+# 确保已安装 PyInstaller
+pip install pyinstaller
+
+# 使用 spec 文件构建
+pyinstaller mcp-interactive.spec
+```
+
+注意：您必须在目标平台上构建（例如，您不能从 Windows 构建 macOS 可执行文件）
+
+### 通过 GitHub 分发
+
+要使您构建的可执行文件可供下载：
+
+1. 为您的项目创建 GitHub 发布
+2. 将构建好的可执行文件作为发布资产上传
+3. 提供清晰的文档，说明每个平台使用哪个可执行文件
+
+示例步骤：
+1. 导航到您的 GitHub 仓库
+2. 点击右侧边栏中的"Releases"
+3. 点击"Create a new release"
+4. 设置版本标签（例如，v1.0.0）
+5. 为您的发布添加标题和描述
+6. 拖放或上传不同平台的可执行文件
+7. 点击"Publish release"
+
+用户随后可以从 GitHub 发布页面下载适合其操作系统的版本。
 
 ## 许可证
 

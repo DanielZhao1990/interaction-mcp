@@ -1,6 +1,0 @@
-# Tkinter UI 依赖
-# 引入基础依赖
--r requirements-base.txt
-
-# Tkinter 界面 - 通常 Python 自带，无需额外安装
-# 如有特殊需求可添加相关依赖 

@@ -1,0 +1,11 @@
+# -*- coding: utf-8 -*-
+# PyQt 最小化依赖 - 仅用于打包PyQt界面版本
+
+# 核心依赖
+fastmcp>=2.3.0
+typer>=0.15.0
+python-dotenv>=1.1.0
+httpx>=0.24.0
+
+# PyQt界面依赖
+PyQt5>=5.15.0 

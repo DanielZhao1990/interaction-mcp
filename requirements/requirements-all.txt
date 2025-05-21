@@ -1,0 +1,4 @@
+-r requirements-base.txt
+-r requirements-pyqt.txt
+-r requirements-web.txt
+
