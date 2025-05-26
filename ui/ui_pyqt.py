@@ -17,7 +17,7 @@ try:
     from PyQt5.QtWidgets import (
         QApplication, QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, 
         QListWidget, QListWidgetItem, QCheckBox, QLineEdit, QTextEdit, QPlainTextEdit,
-        QGroupBox, QRadioButton, QButtonGroup
+        QGroupBox, QRadioButton, QButtonGroup, QScrollArea, QWidget, QDesktopWidget
     )
     from PyQt5.QtCore import QObject, pyqtSignal, Qt
     PYQT_AVAILABLE = True
@@ -130,22 +130,43 @@ else:
                         def __init__(self, options, prompt):
                             super().__init__()
                             
-                            # Set window properties
+                            # Get available screen size (excludes taskbar, etc.)
+                            desktop = QDesktopWidget()
+                            available_rect = desktop.availableGeometry()  # Use available area instead of full screen
+                            window_height = max(600, int(available_rect.height() * 0.7))  # Use 70% of available height, max 600px
+                            window_width = max(800, int(available_rect.width() * 0.6))  # Max 800px or 60% of available width
+                            
+                            # Set window properties with fixed size
                             self.setWindowTitle("Select Option")
-                            self.setMinimumWidth(600)
-                            self.setMinimumHeight(400)
+                            self.setFixedSize(window_width, window_height)  # Use fixed size for consistency
+                            
+                            # Center the window on screen
+                            self.move(
+                                available_rect.x() + (available_rect.width() - window_width) // 2,
+                                available_rect.y() + (available_rect.height() - window_height) // 2
+                            )
                             
                             # Options list
                             self.options = options
                             
-                            # Create layout
-                            layout = QVBoxLayout()
+                            # Create main layout
+                            main_layout = QVBoxLayout()
+                            
+                            # Create scrollable content area
+                            scroll_area = QScrollArea()
+                            scroll_area.setWidgetResizable(True)
+                            scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+                            scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+                            
+                            # Create content widget for scrollable area
+                            content_widget = QWidget()
+                            content_layout = QVBoxLayout()
                             
                             # Add prompt label
                             prompt_label = QLabel(prompt)
                             prompt_label.setWordWrap(True)
-                            prompt_label.setStyleSheet("font-weight: bold; font-size: 12pt;")
-                            layout.addWidget(prompt_label)
+                            prompt_label.setStyleSheet("font-weight: bold; font-size: 12pt; margin: 10px;")
+                            content_layout.addWidget(prompt_label)
                             
                             # Options group
                             self.option_group = QButtonGroup(self)
@@ -166,11 +187,12 @@ else:
                                     text = str(opt)
                                     
                                 option_button = QRadioButton(text)
+                                # Note: QRadioButton doesn't have setWordWrap, but text will wrap naturally in layout
                                 self.option_group.addButton(option_button, i)
                                 option_layout.addWidget(option_button)
                                 
                             option_container.setLayout(option_layout)
-                            layout.addWidget(option_container)
+                            content_layout.addWidget(option_container)
                             
                             # Custom input area (always allowed)
                             custom_group = QGroupBox("Custom Input")
@@ -185,26 +207,35 @@ else:
                             self.custom_input.setPlaceholderText("Enter your custom answer here")
                             self.custom_input.setEnabled(False)  # Initially disabled
                             self.custom_input.setMinimumHeight(100)  # Set minimum height for multi-line input
+                            self.custom_input.setMaximumHeight(150)  # Limit height to prevent excessive growth
                             
                             # Connect custom radio button event
                             self.custom_radio.toggled.connect(self.toggle_custom_input)
                             
                             custom_layout.addWidget(self.custom_input)
                             custom_group.setLayout(custom_layout)
-                            layout.addWidget(custom_group)
+                            content_layout.addWidget(custom_group)
                             
-                            # Button area
+                            # Set content widget layout and add to scroll area
+                            content_widget.setLayout(content_layout)
+                            scroll_area.setWidget(content_widget)
+                            
+                            # Add scroll area to main layout
+                            main_layout.addWidget(scroll_area)
+                            
+                            # Button area - fixed at bottom
                             button_layout = QHBoxLayout()
                             submit_button = QPushButton("Submit")
                             submit_button.clicked.connect(self.accept)
+                            submit_button.setMinimumHeight(35)  # Ensure button is easily clickable
                             button_layout.addStretch()
                             button_layout.addWidget(submit_button)
                             
-                            layout.addLayout(button_layout)
+                            main_layout.addLayout(button_layout)
                             
-                            # Set layout
-                            self.setLayout(layout)
-                            
+                            # Set main layout
+                            self.setLayout(main_layout)
+                        
                         def toggle_custom_input(self, enabled):
                             """Enable/disable custom input field"""
                             self.custom_input.setEnabled(enabled)
@@ -349,50 +380,85 @@ else:
                         def __init__(self, prompt, current_info=""):
                             super().__init__()
                             
-                            # Set window properties
-                            self.setWindowTitle("Information Input")
-                            self.setMinimumWidth(600)
-                            self.setMinimumHeight(400)
+                            # Get available screen size (excludes taskbar, etc.)
+                            desktop = QDesktopWidget()
+                            available_rect = desktop.availableGeometry()  # Use available area instead of full screen
+                            window_height = max(600, int(available_rect.height() * 0.7))  # Use 70% of available height, max 600px
+                            window_width = max(800, int(available_rect.width() * 0.6))  # Max 800px or 60% of available width
                             
-                            # Create layout
-                            layout = QVBoxLayout()
+                            # Set window properties with fixed size
+                            self.setWindowTitle("Information Input")
+                            self.setFixedSize(window_width, window_height)  # Use fixed size for consistency
+                            
+                            # Center the window on screen
+                            self.move(
+                                available_rect.x() + (available_rect.width() - window_width) // 2,
+                                available_rect.y() + (available_rect.height() - window_height) // 2
+                            )
+                            
+                            # Create main layout
+                            main_layout = QVBoxLayout()
+                            
+                            # Create scrollable content area
+                            scroll_area = QScrollArea()
+                            scroll_area.setWidgetResizable(True)
+                            scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+                            scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+                            
+                            # Create content widget for scrollable area
+                            content_widget = QWidget()
+                            content_layout = QVBoxLayout()
                             
                             # Add prompt label
                             prompt_label = QLabel(prompt)
                             prompt_label.setWordWrap(True)
-                            prompt_label.setStyleSheet("font-weight: bold; font-size: 12pt;")
-                            layout.addWidget(prompt_label)
+                            prompt_label.setStyleSheet("font-weight: bold; font-size: 12pt; margin: 10px;")
+                            content_layout.addWidget(prompt_label)
                             
                             # Add current information (if any)
                             if current_info:
                                 info_label = QLabel("Current Information:")
                                 info_label.setStyleSheet("font-weight: bold;")
-                                layout.addWidget(info_label)
+                                content_layout.addWidget(info_label)
                                 
                                 info_display = QTextEdit()
                                 info_display.setReadOnly(True)
                                 info_display.setPlainText(current_info)
-                                info_display.setMaximumHeight(150)
-                                layout.addWidget(info_display)
+                                info_display.setMaximumHeight(200)  # Limit height to prevent excessive growth
+                                content_layout.addWidget(info_display)
                             
                             # Add input label
                             input_label = QLabel("Please enter information:")
-                            layout.addWidget(input_label)
+                            content_layout.addWidget(input_label)
                             
-                            # Create text input widget (multi-line)
+                            # Set content widget layout and add to scroll area
+                            content_widget.setLayout(content_layout)
+                            scroll_area.setWidget(content_widget)
+                            
+                            # Add scroll area to main layout
+                            main_layout.addWidget(scroll_area)
+                            
+                            # Create text input widget (multi-line) - fixed at bottom
                             self.input_field = QPlainTextEdit()
                             self.input_field.setMinimumHeight(150)  # Ensure good height for multi-line input
-                            layout.addWidget(self.input_field)
+                            self.input_field.setMaximumHeight(200)  # Limit height to prevent excessive growth
+                            main_layout.addWidget(self.input_field)
                             
-                            # Add buttons
+                            # Add buttons - fixed at bottom
+                            button_layout = QHBoxLayout()
                             submit_button = QPushButton("Submit")
                             submit_button.clicked.connect(self.accept)
-                            layout.addWidget(submit_button)
+                            submit_button.setMinimumHeight(35)  # Ensure button is easily clickable
+                            button_layout.addStretch()
+                            button_layout.addWidget(submit_button)
                             
-                            # Apply layout
-                            self.setLayout(layout)
+                            main_layout.addLayout(button_layout)
                             
+                            # Apply main layout
+                            self.setLayout(main_layout)
+                        
                         def get_input(self):
+                            """Get user input from the text field"""
                             return self.input_field.toPlainText()
                     
                     dialog = InputDialog(prompt, current_info)
