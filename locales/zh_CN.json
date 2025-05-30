@@ -21,5 +21,22 @@
   "select_error_message": "请选择一个选项或提供自定义输入",
   "user_selected": "用户已选择选项",
   "input_required_error": "请输入补充信息",
-  "user_provided_info": "用户提供了补充信息"
+  "user_provided_info": "用户提供了补充信息",
+  
+  "prompt_label": "提示信息",
+  "user_input_label": "用户输入",
+  "available_options": "可选选项",
+  "custom_answer": "提供自定义答案",
+  "input_placeholder": "请在此输入您的信息...",
+  "custom_input_placeholder": "请在此输入您的自定义答案",
+  "no_current_info": "无当前信息",
+  "input_end_marker": "END",
+  
+  "pyqt_not_installed": "错误：无法使用PyQt界面，PyQt5未安装",
+  "pyqt_interface_unavailable": "PyQt5未安装，界面不可用",
+  "pyqt_dialog_error": "PyQt对话框错误",
+  "pyqt_ui_error": "PyQt界面错误",
+  "pyqt_interface_error": "PyQt界面错误",
+  "user_cancelled_selection": "用户取消了选择",
+  "no_option_selected": "未选择任何选项"
 }

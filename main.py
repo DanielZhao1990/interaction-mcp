@@ -74,7 +74,7 @@ def run(
     port: int = typer.Option(7888, help="Server port"),
     log_level: str = typer.Option("warning", help="Log level: debug, info, warning, error, critical"),
     transport: str = typer.Option("stdio", help="Transport protocol: simple, stdio, sse, streamable-http"),
-    ui: str = typer.Option("cli", help="UI type: cli, pyqt, web"),
+    ui: str = typer.Option("pyqt", help="UI type: cli, pyqt, web"),
     lang: LangType = typer.Option(LangType.EN_US, help="Interface language: zh_CN, en_US")
 ):
     """
@@ -260,8 +260,8 @@ async def _test_select_option():
 async def _test_request_additional_info():
     """Test information supplement tool"""
     result = await request_additional_info(
-        prompt="Please provide more information",
-        current_info="This is the current information, needs supplement"
+        prompt="Please provide more information\n"*100,
+        current_info="This is the current information, needs supplement.\n"*100
     )
     console.print(f"User provided information: {result}")
 

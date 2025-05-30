@@ -34,7 +34,6 @@ class BaseUI(ABC):
         Args:
             options: List of options, can be a list of strings or dictionaries
             prompt: Prompt message displayed to the user
-            ctx: FastMCP context object
             
         Returns:
             Dictionary containing the selection result
@@ -184,13 +183,10 @@ async def request_additional_info(
     ctx: Context = None
 ) -> str:
     """
-    Request supplementary information from the user using the currently set UI
-    
+    Request user supplementary information
     Args:
         prompt: Prompt for requesting information
         current_info: Current information, displayed to users as reference
-        ctx: FastMCP context object
-        
     Returns:
         The supplementary information input by the user
     """

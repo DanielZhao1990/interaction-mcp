@@ -22,5 +22,22 @@
   "select_error_message": "Please select an option or provide custom input",
   "user_selected": "User has selected an option",
   "input_required_error": "Please enter additional information",
-  "user_provided_info": "User has provided additional information"
+  "user_provided_info": "User has provided additional information",
+  
+  "prompt_label": "Prompt",
+  "user_input_label": "User Input",
+  "available_options": "Available Options",
+  "custom_answer": "Provide custom answer",
+  "input_placeholder": "Please enter your information here...",
+  "custom_input_placeholder": "Enter your custom answer here",
+  "no_current_info": "No current information",
+  "input_end_marker": "END",
+  
+  "pyqt_not_installed": "Error: Cannot use PyQt interface, PyQt5 not installed",
+  "pyqt_interface_unavailable": "PyQt5 not installed, interface unavailable",
+  "pyqt_dialog_error": "PyQt dialog error",
+  "pyqt_ui_error": "PyQt UI error",
+  "pyqt_interface_error": "PyQt interface error",
+  "user_cancelled_selection": "User cancelled selection",
+  "no_option_selected": "No option selected"
 }

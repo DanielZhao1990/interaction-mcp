@@ -12,6 +12,14 @@ import traceback
 from typing import List, Dict, Any, Optional, Union
 from fastmcp import Context
 
+# Import language manager
+try:
+    from lang_manager import get_text
+except ImportError:
+    # Fallback if lang_manager is not available
+    def get_text(key):
+        return key
+
 # Import PyQt5 modules (if available)
 try:
     from PyQt5.QtWidgets import (
@@ -40,23 +48,23 @@ if not PYQT_AVAILABLE:
         
         def __init__(self):
             """Initialize PyQt interface"""
-            print("Warning: PyQt5 not installed, PyQt interface will not be available")
+            print(f"Warning: {get_text('pyqt_not_installed')}")
             self._pyqt_available = False
         
         async def select_option(self, options, prompt="Please select one of the following options", ctx=None):
             """Placeholder method"""
-            print("Error: Cannot use PyQt interface, PyQt5 not installed")
+            print(get_text("pyqt_not_installed"))
             return {
                 "selected_index": -1,
                 "selected_option": None,
-                "custom_input": "PyQt5 not installed, interface unavailable",
+                "custom_input": get_text("pyqt_interface_unavailable"),
                 "is_custom": True
             }
         
         async def request_additional_info(self, prompt, current_info="", ctx=None):
             """Placeholder method"""
-            print("Error: Cannot use PyQt interface, PyQt5 not installed")
-            return "PyQt5 not installed, interface unavailable"
+            print(get_text("pyqt_not_installed"))
+            return get_text("pyqt_interface_unavailable")
             
     # Assign placeholder class to PyQtUI
     PyQtUI = PyQtUIMissingDeps  # type: ignore
@@ -100,11 +108,11 @@ else:
                 Selection result dictionary
             """
             if not self._pyqt_available:
-                print("Error: Cannot use PyQt interface, PyQt5 not installed")
+                print(get_text("pyqt_not_installed"))
                 return {
                     "selected_index": -1,
                     "selected_option": None,
-                    "custom_input": "PyQt5 not installed, interface unavailable",
+                    "custom_input": get_text("pyqt_interface_unavailable"),
                     "is_custom": True
                 }
             
@@ -137,7 +145,7 @@ else:
                             window_width = max(800, int(available_rect.width() * 0.6))  # Max 800px or 60% of available width
                             
                             # Set window properties with fixed size
-                            self.setWindowTitle("Select Option")
+                            self.setWindowTitle(get_text("select_dialog_title"))
                             self.setFixedSize(window_width, window_height)  # Use fixed size for consistency
                             
                             # Center the window on screen
@@ -172,7 +180,7 @@ else:
                             self.option_group = QButtonGroup(self)
                             self.option_group.setExclusive(True)  # Radio selection
                             
-                            option_container = QGroupBox("Available Options")
+                            option_container = QGroupBox(get_text("available_options"))
                             option_layout = QVBoxLayout()
                             
                             # Add predefined options
@@ -195,16 +203,16 @@ else:
                             content_layout.addWidget(option_container)
                             
                             # Custom input area (always allowed)
-                            custom_group = QGroupBox("Custom Input")
+                            custom_group = QGroupBox(get_text("custom_input_group"))
                             custom_layout = QVBoxLayout()
                             
-                            self.custom_radio = QRadioButton("Provide custom answer")
+                            self.custom_radio = QRadioButton(get_text("custom_answer"))
                             self.option_group.addButton(self.custom_radio, -1)
                             custom_layout.addWidget(self.custom_radio)
                             
                             # Changed from QLineEdit to QPlainTextEdit for multi-line input
                             self.custom_input = QPlainTextEdit()
-                            self.custom_input.setPlaceholderText("Enter your custom answer here")
+                            self.custom_input.setPlaceholderText(get_text("custom_input_placeholder"))
                             self.custom_input.setEnabled(False)  # Initially disabled
                             self.custom_input.setMinimumHeight(100)  # Set minimum height for multi-line input
                             self.custom_input.setMaximumHeight(150)  # Limit height to prevent excessive growth
@@ -225,7 +233,7 @@ else:
                             
                             # Button area - fixed at bottom
                             button_layout = QHBoxLayout()
-                            submit_button = QPushButton("Submit")
+                            submit_button = QPushButton(get_text("submit_button"))
                             submit_button.clicked.connect(self.accept)
                             submit_button.setMinimumHeight(35)  # Ensure button is easily clickable
                             button_layout.addStretch()
@@ -267,7 +275,7 @@ else:
                                 return {
                                     "selected_index": -1,
                                     "selected_option": None,
-                                    "custom_input": "No option selected",
+                                    "custom_input": get_text("no_option_selected"),
                                     "is_custom": True
                                 }
                     
@@ -283,7 +291,7 @@ else:
                         on_selection_completed({
                             "selected_index": -1,
                             "selected_option": None,
-                            "custom_input": "User cancelled selection",
+                            "custom_input": get_text("user_cancelled_selection"),
                             "is_custom": True
                         })
                     
@@ -292,12 +300,12 @@ else:
                         app.quit()
                     
                 except Exception as e:
-                    logger.error(f"PyQt dialog error: {e}")
+                    logger.error(f"{get_text('pyqt_dialog_error')}: {e}")
                     logger.error(traceback.format_exc())
                     on_selection_completed({
                         "selected_index": -1,
                         "selected_option": None,
-                        "custom_input": f"Error: {str(e)}",
+                        "custom_input": f"{get_text('pyqt_dialog_error')}: {str(e)}",
                         "is_custom": True
                     })
             
@@ -305,7 +313,7 @@ else:
             try:
                 # Notify context
                 if ctx:
-                    await ctx.info("Displaying options using PyQt interface...")
+                    await ctx.info(get_text("wait_user_select"))
                     
                 # Start thread
                 loop = asyncio.get_running_loop()
@@ -320,20 +328,20 @@ else:
                 # Notify context
                 if ctx:
                     if result["is_custom"]:
-                        await ctx.info(f"User provided custom answer: {result['custom_input']}")
+                        await ctx.info(f"{get_text('user_provided_info')}: {result['custom_input']}")
                     else:
-                        await ctx.info(f"User selected option {result['selected_index'] + 1}")
+                        await ctx.info(f"{get_text('user_selected')} {result['selected_index'] + 1}")
                 
                 return result
                 
             except Exception as e:
-                logger.error(f"PyQt UI error: {e}")
+                logger.error(f"{get_text('pyqt_ui_error')}: {e}")
                 if ctx:
-                    await ctx.error(f"PyQt UI error: {e}")
+                    await ctx.error(f"{get_text('pyqt_ui_error')}: {e}")
                 return {
                     "selected_index": -1,
                     "selected_option": None,
-                    "custom_input": f"PyQt interface error: {str(e)}",
+                    "custom_input": f"{get_text('pyqt_interface_error')}: {str(e)}",
                     "is_custom": True
                 }
         
@@ -355,8 +363,8 @@ else:
                 User input information
             """
             if not self._pyqt_available:
-                print("Error: Cannot use PyQt interface, PyQt5 not installed")
-                return "PyQt5 not installed, interface unavailable"
+                print(get_text("pyqt_not_installed"))
+                return get_text("pyqt_interface_unavailable")
             
             logger.debug(f"request_additional_info called: prompt={prompt}, current_info={current_info}")
             
@@ -387,7 +395,7 @@ else:
                             window_width = max(800, int(available_rect.width() * 0.6))  # Max 800px or 60% of available width
                             
                             # Set window properties with fixed size
-                            self.setWindowTitle("Information Input")
+                            self.setWindowTitle(get_text("info_request_title"))
                             self.setFixedSize(window_width, window_height)  # Use fixed size for consistency
                             
                             # Center the window on screen
@@ -398,57 +406,58 @@ else:
                             
                             # Create main layout
                             main_layout = QVBoxLayout()
+                            main_layout.setSpacing(10)  # Set spacing between groups
+                            main_layout.setContentsMargins(15, 15, 15, 15)  # Set margins
                             
-                            # Create scrollable content area
-                            scroll_area = QScrollArea()
-                            scroll_area.setWidgetResizable(True)
-                            scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-                            scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+                            # Calculate available height for each group (minus button area and spacing)
+                            button_area_height = 50  # Button area height
+                            total_spacing = 4 * 10 + 30  # Total spacing (4 spacings + margins)
+                            available_height = window_height - button_area_height - total_spacing
+                            group_height = available_height // 3  # Divide into three equal groups
                             
-                            # Create content widget for scrollable area
-                            content_widget = QWidget()
-                            content_layout = QVBoxLayout()
+                            # First group: Prompt information
+                            prompt_label = QLabel(get_text("prompt_label") + ":")
+                            prompt_label.setStyleSheet("font-weight: bold; font-size: 10pt;")
+                            prompt_label.setFixedHeight(25)  # Fixed height for small label
+                            main_layout.addWidget(prompt_label)
                             
-                            # Add prompt label
-                            prompt_label = QLabel(prompt)
-                            prompt_label.setWordWrap(True)
-                            prompt_label.setStyleSheet("font-weight: bold; font-size: 12pt; margin: 10px;")
-                            content_layout.addWidget(prompt_label)
+                            self.prompt_edit = QPlainTextEdit(prompt)
+                            self.prompt_edit.setReadOnly(True)
+                            self.prompt_edit.setFixedHeight(group_height - 25)  # Minus label height
+                            self.prompt_edit.setStyleSheet("background-color: #f5f5f5; border: 1px solid #ccc;")
+                            main_layout.addWidget(self.prompt_edit)
                             
-                            # Add current information (if any)
-                            if current_info:
-                                info_label = QLabel("Current Information:")
-                                info_label.setStyleSheet("font-weight: bold;")
-                                content_layout.addWidget(info_label)
-                                
-                                info_display = QTextEdit()
-                                info_display.setReadOnly(True)
-                                info_display.setPlainText(current_info)
-                                info_display.setMaximumHeight(200)  # Limit height to prevent excessive growth
-                                content_layout.addWidget(info_display)
+                            # Second group: Current information
+                            info_label = QLabel(get_text("current_info_title") + ":")
+                            info_label.setStyleSheet("font-weight: bold; font-size: 10pt;")
+                            info_label.setFixedHeight(25)  # Fixed height for small label
+                            main_layout.addWidget(info_label)
                             
-                            # Add input label
-                            input_label = QLabel("Please enter information:")
-                            content_layout.addWidget(input_label)
+                            self.info_edit = QPlainTextEdit(current_info if current_info else get_text("no_current_info"))
+                            self.info_edit.setReadOnly(True)
+                            self.info_edit.setFixedHeight(group_height - 25)  # Minus label height
+                            self.info_edit.setStyleSheet("background-color: #f5f5f5; border: 1px solid #ccc;")
+                            main_layout.addWidget(self.info_edit)
                             
-                            # Set content widget layout and add to scroll area
-                            content_widget.setLayout(content_layout)
-                            scroll_area.setWidget(content_widget)
+                            # Third group: User input
+                            input_label = QLabel(get_text("user_input_label") + ":")
+                            input_label.setStyleSheet("font-weight: bold; font-size: 10pt; color: #2c5aa0;")
+                            input_label.setFixedHeight(25)  # Fixed height for small label
+                            main_layout.addWidget(input_label)
                             
-                            # Add scroll area to main layout
-                            main_layout.addWidget(scroll_area)
-                            
-                            # Create text input widget (multi-line) - fixed at bottom
                             self.input_field = QPlainTextEdit()
-                            self.input_field.setMinimumHeight(150)  # Ensure good height for multi-line input
-                            self.input_field.setMaximumHeight(200)  # Limit height to prevent excessive growth
+                            self.input_field.setPlaceholderText(get_text("input_placeholder"))
+                            self.input_field.setFixedHeight(group_height - 25)  # Minus label height
+                            self.input_field.setStyleSheet("border: 2px solid #2c5aa0; border-radius: 4px;")
+                            self.input_field.setFocus()  # Default focus on input field
                             main_layout.addWidget(self.input_field)
                             
                             # Add buttons - fixed at bottom
                             button_layout = QHBoxLayout()
-                            submit_button = QPushButton("Submit")
+                            submit_button = QPushButton(get_text("submit_button"))
                             submit_button.clicked.connect(self.accept)
                             submit_button.setMinimumHeight(35)  # Ensure button is easily clickable
+                            submit_button.setStyleSheet("QPushButton { background-color: #2c5aa0; color: white; font-weight: bold; border-radius: 4px; } QPushButton:hover { background-color: #1e3d6f; }")
                             button_layout.addStretch()
                             button_layout.addWidget(submit_button)
                             
@@ -473,15 +482,15 @@ else:
                         app.quit()
                     
                 except Exception as e:
-                    logger.error(f"PyQt dialog error: {e}")
+                    logger.error(f"{get_text('pyqt_dialog_error')}: {e}")
                     logger.error(traceback.format_exc())
-                    on_input_completed(f"Error: {str(e)}")
+                    on_input_completed(f"{get_text('pyqt_dialog_error')}: {str(e)}")
             
             # Execute QT dialog in thread pool
             try:
                 # Notify context
                 if ctx:
-                    await ctx.info("Requesting user input using PyQt interface...")
+                    await ctx.info(get_text("wait_user_input"))
                     
                 # Start thread
                 loop = asyncio.get_running_loop()
@@ -492,15 +501,15 @@ else:
                 
                 # Return result
                 if ctx:
-                    await ctx.info("User provided input information")
+                    await ctx.info(get_text("user_provided_info"))
                 
                 return result[0]
                 
             except Exception as e:
-                logger.error(f"PyQt UI error: {e}")
+                logger.error(f"{get_text('pyqt_ui_error')}: {e}")
                 if ctx:
-                    await ctx.error(f"PyQt UI error: {e}")
-                return f"PyQt interface error: {str(e)}"
+                    await ctx.error(f"{get_text('pyqt_ui_error')}: {e}")
+                return f"{get_text('pyqt_interface_error')}: {str(e)}"
         
         def cleanup(self):
             """Clean up resources"""
