@@ -73,7 +73,7 @@ def run(
     host: str = typer.Option("127.0.0.1", help="Server host address"),
     port: int = typer.Option(7888, help="Server port"),
     log_level: str = typer.Option("warning", help="Log level: debug, info, warning, error, critical"),
-    transport: str = typer.Option("sse", help="Transport protocol: simple, stdio, sse, streamable-http"),
+    transport: str = typer.Option("stdio", help="Transport protocol: simple, stdio, sse, streamable-http"),
     ui: str = typer.Option("cli", help="UI type: cli, pyqt, web"),
     lang: LangType = typer.Option(LangType.EN_US, help="Interface language: zh_CN, en_US")
 ):
@@ -86,17 +86,21 @@ def run(
     # Note: On Windows, only a subset of POSIX signals are supported
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
-    
+        # 设置日志级别
+    try:
+        logging_level = getattr(logging, log_level.upper())
+        logging.getLogger().setLevel(logging_level)
+        logging.getLogger('FastMCP').setLevel(logging_level)
+        logging.getLogger('UI').setLevel(logging.WARNING)  # 保持UI模块在警告级别
+    except AttributeError:
+        console.print(f"[bold red]Invalid log level: {log_level}, using WARNING[/bold red]")
+        logging.getLogger().setLevel(logging.WARNING)
     # 根据传输协议显示不同的启动信息
     if transport == "stdio":
-        console.print(
-            Panel.fit(
-                f"Starting [bold green]MCPInteractive[/bold green] v1.0.0\n"
-                f"Transport protocol: [bold yellow]{transport}[/bold yellow]\n"
-                f"Log level: [bold cyan]{log_level}[/bold cyan]",
-                title="FastMCP Service",
-                border_style="green"
-            )
+        logging.info(
+            f"Starting MCPInteractive v1.0.0\n"
+            f"Transport protocol: {transport}\n"
+            f"Log level: {log_level}"
         )
     else:
         console.print(
@@ -110,25 +114,15 @@ def run(
             )
         )
     
-    console.print("[bold yellow]Tip: Press Ctrl+C to terminate service[/bold yellow]")
-    
-    # 设置日志级别
-    try:
-        logging_level = getattr(logging, log_level.upper())
-        logging.getLogger().setLevel(logging_level)
-        logging.getLogger('FastMCP').setLevel(logging_level)
-        logging.getLogger('UI').setLevel(logging.WARNING)  # 保持UI模块在警告级别
-    except AttributeError:
-        console.print(f"[bold red]Invalid log level: {log_level}, using WARNING[/bold red]")
-        logging.getLogger().setLevel(logging.WARNING)
-    
+
+    logging.info("Tip: Press Ctrl+C to terminate service")
     # Set UI type
     set_ui_type(ui)
-    console.print(f"Using UI type: [bold magenta]{ui}[/bold magenta]")
+    logging.info(f"Using UI type: [bold magenta]{ui}[/bold magenta]")
     
     # Set interface language
     set_language(lang)
-    console.print(f"Using interface language: [bold cyan]{lang}[/bold cyan]")
+    logging.info(f"Using interface language: [bold cyan]{lang}[/bold cyan]")
     
     # According to documentation, use the correct mcp.run() method and transport protocol
     try:
@@ -145,7 +139,7 @@ def run(
                 mcp.run()
         elif transport == "stdio":
             # STDIO mode - 不支持大多数参数
-            console.print("[bold green]Starting in stdio mode...[/bold green]")
+            logging.info("[bold green]Starting in stdio mode...[/bold green]")
             mcp.run(transport="stdio")
         elif transport == "streamable-http":
             # Streamable HTTP mode

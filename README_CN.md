@@ -280,9 +280,11 @@ python main.py list-tools
 ```bash
 # 测试选项选择工具
 python main.py test select_option --ui=cli
+python main.py test select_option --ui=pyqt
 
 # 测试信息补充工具
 python main.py test request_additional_info --ui=cli
+python main.py test request_additional_info --ui=pyqt
 ```
 
 
