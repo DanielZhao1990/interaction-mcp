@@ -260,8 +260,7 @@ async def _test_select_option():
 async def _test_request_additional_info():
     """Test information supplement tool"""
     result = await request_additional_info(
-        prompt="Please provide more information\n"*100,
-        current_info="This is the current information, needs supplement.\n"*100
+        prompt="Please provide more information\n"*100
     )
     console.print(f"User provided information: {result}")
 

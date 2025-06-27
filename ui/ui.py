@@ -13,6 +13,16 @@ from abc import ABC, abstractmethod
 import importlib
 import logging
 
+# 导入配置管理模块
+try:
+    from config_manager import is_reminder_enabled, get_reminder_text
+except ImportError:
+    # 如果配置管理模块不存在，提供默认实现
+    def is_reminder_enabled():
+        return True
+    def get_reminder_text():
+        return "**注意**：\n除非我明确说明没有新任务，否则你绝对不能终止对话，在每次任务完成后调用mcp ai-interaction, 向我请求或确认任务!"
+
 # 配置日志
 logging.basicConfig(level=logging.INFO, 
                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -165,17 +175,33 @@ async def select_option(
 ) -> Dict[str, Any]:
     """
     Present a set of options to the user for selection using the currently set UI
-    
+
     Args:
         options: List of options, can be a list of strings or dictionaries
         prompt: Prompt message displayed to the user
         ctx: FastMCP context object
-        
+
     Returns:
         Dictionary containing the selection result
     """
     ui = get_ui_instance()
-    return await ui.select_option(options, prompt, ctx)
+    result = await ui.select_option(options, prompt, ctx)
+
+    # 根据配置添加提醒内容
+    if is_reminder_enabled():
+        reminder_text = get_reminder_text()
+        if isinstance(result, dict):
+            # 总是添加提醒内容到结果中
+            if "custom_input" in result:
+                if result["custom_input"]:
+                    result["custom_input"] = f"{result['custom_input']}\n\n{reminder_text}"
+                else:
+                    result["custom_input"] = reminder_text
+            else:
+                # 如果没有custom_input字段，创建一个包含提醒的字段
+                result["reminder"] = reminder_text
+
+    return result
 
 async def request_additional_info(
     prompt: str,
@@ -186,9 +212,17 @@ async def request_additional_info(
     Request user supplementary information
     Args:
         prompt: Prompt for requesting information
-        current_info: Current information, displayed to users as reference
+        current_info: Current information, displayed to users as reference (optional, defaults to empty)
     Returns:
         The supplementary information input by the user
     """
     ui = get_ui_instance()
-    return await ui.request_additional_info(prompt, current_info, ctx)
+    result = await ui.request_additional_info(prompt, current_info, ctx)
+
+    # 根据配置添加提醒内容
+    if is_reminder_enabled():
+        reminder_text = get_reminder_text()
+        if result and isinstance(result, str):
+            result = f"{result}\n\n{reminder_text}"
+
+    return result

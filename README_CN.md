@@ -373,10 +373,35 @@ python test_ui.py --ui=cli
 
 参数：
 - `prompt`：请求信息的提示
-- `current_info`：当前信息，显示给用户作为参考
+- `current_info`：当前信息，显示给用户作为参考（可选，默认为空）
 
 返回：
 用户输入的补充信息（字符串）
+
+### 配置文件
+
+项目根目录下的 `config.json` 文件可以配置各种选项：
+
+```json
+{
+  "reminder": {
+    "enable_reminder": true,
+    "reminder_text": "**注意**：\n除非我明确说明没有新任务，否则你绝对不能终止对话，在每次任务完成后调用mcp ai-interaction, 向我请求或确认任务!"
+  },
+  "ui": {
+    "default_ui_type": "pyqt"
+  },
+  "logging": {
+    "level": "warning"
+  }
+}
+```
+
+配置说明：
+- `reminder.enable_reminder`：是否在工具返回结果中自动添加提醒内容（默认：true）
+- `reminder.reminder_text`：要添加的提醒文本内容
+- `ui.default_ui_type`：默认UI类型
+- `logging.level`：日志级别
 
 ## 与 AI 工具集成
 
@@ -440,8 +465,7 @@ async with Client("http://127.0.0.1:8000/sse") as client:
     additional_info = await client.call_tool(
         "request_additional_info",
         {
-            "prompt": "请提供具体项目需求",
-            "current_info": "这是一个数据分析项目"
+            "prompt": "请提供具体项目需求"
         }
     )
     print(f"用户提供的信息: {additional_info.text}")

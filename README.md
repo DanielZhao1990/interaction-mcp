@@ -371,10 +371,35 @@ This tool is used to request supplementary information from users.
 
 Parameters:
 - `prompt`: Prompt for requesting information
-- `current_info`: Current information, displayed to users as reference
+- `current_info`: Current information, displayed to users as reference (optional, defaults to empty)
 
 Return:
 The supplementary information input by the user (string)
+
+### Configuration File
+
+The `config.json` file in the project root directory can configure various options:
+
+```json
+{
+  "reminder": {
+    "enable_reminder": true,
+    "reminder_text": "**Note**:\nUnless I explicitly state there are no new tasks, you must never terminate the conversation. After completing each task, call mcp ai-interaction to request or confirm tasks with me!"
+  },
+  "ui": {
+    "default_ui_type": "pyqt"
+  },
+  "logging": {
+    "level": "warning"
+  }
+}
+```
+
+Configuration options:
+- `reminder.enable_reminder`: Whether to automatically add reminder content to tool return results (default: true)
+- `reminder.reminder_text`: The reminder text content to add
+- `ui.default_ui_type`: Default UI type
+- `logging.level`: Logging level
 
 ## Integration with AI Tools
 
