@@ -676,16 +676,13 @@ def get_preset_params(method_name: str, preset: str) -> Dict[str, Any]:
     # request_additional_info 方法的预设参数
     request_info_presets = {
         "default": {
-            "prompt": "请提供更多关于数据来源和分析目标的信息",
-            "current_info": "这是一个数据分析项目，需要处理大量结构化数据。"
+            "prompt": "请提供更多关于数据来源和分析目标的信息"
         },
         "simple": {
-            "prompt": "请输入您的联系邮箱",
-            "current_info": ""
+            "prompt": "请输入您的联系邮箱"
         },
         "complex": {
-            "prompt": "请详细描述您遇到的问题，包括错误信息和复现步骤",
-            "current_info": "在运行程序时遇到了异常，但没有具体的错误信息。"
+            "prompt": "请详细描述您遇到的问题，包括错误信息和复现步骤"
         }
     }
     

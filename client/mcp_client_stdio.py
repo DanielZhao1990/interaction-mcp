@@ -152,8 +152,7 @@ async def test_request_additional_info(client):
     console.print("\n[bold]测试 request_additional_info 工具...[/bold]")
     
     params = {
-        "prompt": "请提供更多关于项目的信息",
-        "current_info": "这是一个 FastMCP 测试项目"
+        "prompt": "请提供更多关于项目的信息"
     }
     
     console.print(Panel(

@@ -1,0 +1,12 @@
+{
+  "reminder": {
+    "enable_reminder": true,
+    "reminder_text": "**注意**：\n除非我明确说明没有新任务，否则你绝对不能终止对话，在每次任务完成后调用mcp ai-interaction, 向我请求或确认任务!"
+  },
+  "ui": {
+    "default_ui_type": "pyqt"
+  },
+  "logging": {
+    "level": "warning"
+  }
+}
