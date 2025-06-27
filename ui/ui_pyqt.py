@@ -427,17 +427,21 @@ else:
                             self.prompt_edit.setStyleSheet("background-color: #f5f5f5; border: 1px solid #ccc;")
                             main_layout.addWidget(self.prompt_edit)
                             
-                            # Second group: Current information
-                            info_label = QLabel(get_text("current_info_title") + ":")
-                            info_label.setStyleSheet("font-weight: bold; font-size: 10pt;")
-                            info_label.setFixedHeight(25)  # Fixed height for small label
-                            main_layout.addWidget(info_label)
-                            
-                            self.info_edit = QPlainTextEdit(current_info if current_info else get_text("no_current_info"))
-                            self.info_edit.setReadOnly(True)
-                            self.info_edit.setFixedHeight(group_height - 25)  # Minus label height
-                            self.info_edit.setStyleSheet("background-color: #f5f5f5; border: 1px solid #ccc;")
-                            main_layout.addWidget(self.info_edit)
+                            # Second group: Current information (only show if current_info is provided)
+                            if current_info and current_info.strip():
+                                info_label = QLabel(get_text("current_info_title") + ":")
+                                info_label.setStyleSheet("font-weight: bold; font-size: 10pt;")
+                                info_label.setFixedHeight(25)  # Fixed height for small label
+                                main_layout.addWidget(info_label)
+
+                                self.info_edit = QPlainTextEdit(current_info)
+                                self.info_edit.setReadOnly(True)
+                                self.info_edit.setFixedHeight(group_height - 25)  # Minus label height
+                                self.info_edit.setStyleSheet("background-color: #f5f5f5; border: 1px solid #ccc;")
+                                main_layout.addWidget(self.info_edit)
+                            else:
+                                # If no current_info, allocate more space to input field
+                                group_height = available_height // 2  # Divide into two groups instead of three
                             
                             # Third group: User input
                             input_label = QLabel(get_text("user_input_label") + ":")
