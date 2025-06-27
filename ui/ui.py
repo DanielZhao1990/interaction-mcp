@@ -205,19 +205,17 @@ async def select_option(
 
 async def request_additional_info(
     prompt: str,
-    current_info: str = "",
     ctx: Context = None
 ) -> str:
     """
     Request user supplementary information
     Args:
         prompt: Prompt for requesting information
-        current_info: Current information, displayed to users as reference (optional, defaults to empty)
     Returns:
         The supplementary information input by the user
     """
     ui = get_ui_instance()
-    result = await ui.request_additional_info(prompt, current_info, ctx)
+    result = await ui.request_additional_info(prompt, ctx)
 
     # 根据配置添加提醒内容
     if is_reminder_enabled():

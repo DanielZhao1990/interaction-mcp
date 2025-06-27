@@ -35,7 +35,7 @@ except ImportError:
                 "is_custom": True
             }
         
-        async def request_additional_info(self, prompt, current_info="", multiline=False, ctx=None):
+        async def request_additional_info(self, prompt, ctx=None):
             """Placeholder method"""
             print("Error: Cannot use Web interface, Flask or Flask-SocketIO not installed")
             return "Flask or Flask-SocketIO not installed, interface unavailable"
@@ -340,7 +340,6 @@ else:
         async def request_additional_info(
             self,
             prompt: str,
-            current_info: str = "",
             ctx: Context = None
         ) -> str:
             """
@@ -348,7 +347,6 @@ else:
 
             Args:
                 prompt: Prompt message
-                current_info: Current information
                 ctx: FastMCP context
 
             Returns:
@@ -383,8 +381,7 @@ else:
             async with self._request_lock:
                 self._requests[request_id] = {
                     "type": "request_info",
-                    "prompt": prompt,
-                    "current_info": current_info
+                    "prompt": prompt
                 }
                 self._events[request_id] = event
                 logger.info(f"Stored request data and event for ID: {request_id}")

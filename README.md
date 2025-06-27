@@ -371,7 +371,6 @@ This tool is used to request supplementary information from users.
 
 Parameters:
 - `prompt`: Prompt for requesting information
-- `current_info`: Current information, displayed to users as reference (optional, defaults to empty)
 
 Return:
 The supplementary information input by the user (string)
@@ -463,8 +462,7 @@ async with Client("http://127.0.0.1:8000/sse") as client:
     additional_info = await client.call_tool(
         "request_additional_info",
         {
-            "prompt": "Please provide specific project requirements",
-            "current_info": "This is a data analysis project"
+            "prompt": "Please provide specific project requirements"
         }
     )
     print(f"User provided information: {additional_info.text}")

@@ -311,7 +311,6 @@ if __name__ == "__main__":
     async def request_additional_info(
         self,
         prompt: str,
-        current_info: str = "",
         ctx: Context = None
     ) -> str:
         """
@@ -319,7 +318,6 @@ if __name__ == "__main__":
 
         Args:
             prompt: Prompt message
-            current_info: Current information
             ctx: FastMCP context
 
         Returns:
@@ -343,7 +341,6 @@ if __name__ == "__main__":
                 # Write options and configuration to temporary file
                 json.dump({
                     'prompt': prompt,
-                    'current_info': current_info,
                     'ui_texts': ui_texts
                 }, data_file)
             
@@ -370,14 +367,11 @@ def main():
         data = json.load(f)
     
     prompt = data['prompt']
-    current_info = data['current_info']
     ui_texts = data.get('ui_texts', {})
     end_marker = ui_texts.get('end_marker', 'END')
-    
+
     # Build markdown content
     md_content = f"### {prompt}\\n\\n"
-    if current_info:
-        md_content += f"**{ui_texts.get('current_info', 'Current Information')}**:\\n\\n{current_info}\\n\\n"
     
     # Add multiline input tip
     md_content += f"\\n{ui_texts.get('multiline_tip', 'You can enter multiple lines. Enter ' + end_marker + ' on a separate line to finish.')}\\n"
