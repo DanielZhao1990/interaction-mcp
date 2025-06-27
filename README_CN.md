@@ -373,7 +373,6 @@ python test_ui.py --ui=cli
 
 参数：
 - `prompt`：请求信息的提示
-- `current_info`：当前信息，显示给用户作为参考（可选，默认为空）
 
 返回：
 用户输入的补充信息（字符串）

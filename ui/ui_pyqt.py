@@ -61,7 +61,7 @@ if not PYQT_AVAILABLE:
                 "is_custom": True
             }
         
-        async def request_additional_info(self, prompt, current_info="", ctx=None):
+        async def request_additional_info(self, prompt, ctx=None):
             """Placeholder method"""
             print(get_text("pyqt_not_installed"))
             return get_text("pyqt_interface_unavailable")
@@ -348,7 +348,6 @@ else:
         async def request_additional_info(
             self,
             prompt: str,
-            current_info: str = "",
             ctx: Context = None
         ) -> str:
             """
@@ -411,9 +410,9 @@ else:
                             
                             # Calculate available height for each group (minus button area and spacing)
                             button_area_height = 50  # Button area height
-                            total_spacing = 4 * 10 + 30  # Total spacing (4 spacings + margins)
+                            total_spacing = 3 * 10 + 30  # Total spacing (3 spacings + margins)
                             available_height = window_height - button_area_height - total_spacing
-                            group_height = available_height // 3  # Divide into three equal groups
+                            group_height = available_height // 2  # Divide into two equal groups
                             
                             # First group: Prompt information
                             prompt_label = QLabel(get_text("prompt_label") + ":")
@@ -427,23 +426,7 @@ else:
                             self.prompt_edit.setStyleSheet("background-color: #f5f5f5; border: 1px solid #ccc;")
                             main_layout.addWidget(self.prompt_edit)
                             
-                            # Second group: Current information (only show if current_info is provided)
-                            if current_info and current_info.strip():
-                                info_label = QLabel(get_text("current_info_title") + ":")
-                                info_label.setStyleSheet("font-weight: bold; font-size: 10pt;")
-                                info_label.setFixedHeight(25)  # Fixed height for small label
-                                main_layout.addWidget(info_label)
-
-                                self.info_edit = QPlainTextEdit(current_info)
-                                self.info_edit.setReadOnly(True)
-                                self.info_edit.setFixedHeight(group_height - 25)  # Minus label height
-                                self.info_edit.setStyleSheet("background-color: #f5f5f5; border: 1px solid #ccc;")
-                                main_layout.addWidget(self.info_edit)
-                            else:
-                                # If no current_info, allocate more space to input field
-                                group_height = available_height // 2  # Divide into two groups instead of three
-                            
-                            # Third group: User input
+                            # Second group: User input
                             input_label = QLabel(get_text("user_input_label") + ":")
                             input_label.setStyleSheet("font-weight: bold; font-size: 10pt; color: #2c5aa0;")
                             input_label.setFixedHeight(25)  # Fixed height for small label
